@@ -1,12 +1,8 @@
 #include <stdlib.h>
 #include <signal.h>
-#include <SDL.h>
-#include "../include/liberty.h"
 
-/* prototypes */
-static void cleanup(int signal);
-static void update(void);
-static void handle_signal(LibertySignal signal);
+/* public headers */
+#include "../include/liberty.h"
 
 /* debugging macros */
 #ifdef LIBERTY_DEBUG
@@ -15,11 +11,30 @@ static void handle_signal(LibertySignal signal);
 #define LOG(...) do { } while(0);
 #endif
 
+/* private globals */
+LibertyConfig Config;
+SDL_Window *Window;
+
+/* private source */
+#include "events.c"
+#include "window.c"
+
+/* public source */
+#include "callback.c"
+#include "draw.c"
+#include "config.c"
+
+/* prototypes */
+static void cleanup(int signal);
+static void update(void);
+static void handle_signal(LibertySignal signal);
+
 /* implementation */
 static void cleanup(int signal)
 {
 LOG("calling liberty_callback_cleanup\n");
 	liberty_callback_cleanup();
+	destroy_window(Window);
 LOG("quitting SDL...\n");
 	SDL_Quit();
 LOG("SDL quit\n");
@@ -53,16 +68,21 @@ int main(int argc, char *argv[])
 	SDL_Event event;
 LOG("welcome to liberty!\n");
 
-LOG("initializing SDL...\n");
+LOG("initializing SDL\n");
 	SDL_Init(SDL_INIT_EVERYTHING);
-LOG("SDL initialized\n");
+
+LOG("initializing SDL user events\n")
+	register_sdl_user_events();
 
 LOG("trapping signals\n");
 	signal(SIGINT , cleanup);
 	signal(SIGTERM, cleanup);
 
 LOG("calling liberty_callback_init\n");
-liberty_callback_init();
+	Config = liberty_callback_init();
+
+LOG("initializing the window\n");
+	Window = create_window(Config);
 
 LOG("starting the main game loop\n");
 	/* main game loop */
@@ -71,22 +91,32 @@ LOG("starting the main game loop\n");
 		/* event */
 		while (SDL_PollEvent(&event))
 		{
-			switch (event.type)
+			/* LIBERTY_EVENT isn't known at compile time */
+			if (event.type == LIBERTY_EVENT)
 			{
-				case SDL_WINDOWEVENT:
-					switch (event.window.event)
-					{
-						case SDL_WINDOWEVENT_CLOSE: cleanup(0);
-					} break;
-				case SDL_KEYDOWN: /* fall through */
-				case SDL_KEYUP: {
-						LibertyEvent le;
-						le.type = event.key.repeat ? LIBERTY_EVENT_KEYREPEAT : (event.type == SDL_KEYUP ? LIBERTY_EVENT_KEYRELEASE : LIBERTY_EVENT_KEYPRESS);
-						le.key.keycode = event.key.keysym.sym;
-LOG("key %s %s\n", SDL_GetKeyName(le.key.keycode), (le.type == LIBERTY_EVENT_KEYREPEAT) ? "repeated" : ((le.type == LIBERTY_EVENT_KEYRELEASE) ? "released" : "pressed"));
-						handle_signal(liberty_callback_event(le));
-					} break;
-			}
+				switch (event.user.code)
+				{
+					case LIBERTY_EVENT_CONFIG:
+LOG("applying new Config\n");
+						memcpy(&Config, event.user.data1, sizeof(LibertyConfig));
+						free(event.user.data1);
+						reapply_config();
+						break;
+				}
+			} else
+				switch (event.type)
+				{
+					case SDL_WINDOWEVENT:
+						switch (event.window.event)
+						{
+							case SDL_WINDOWEVENT_CLOSE: cleanup(0);
+							case SDL_WINDOWEVENT_RESIZED:
+								break;
+						} break;
+					default:
+						handle_signal(liberty_callback_event(event));
+						break;
+				}
 		}
 
 		/* update */
@@ -95,7 +125,3 @@ LOG("key %s %s\n", SDL_GetKeyName(le.key.keycode), (le.type == LIBERTY_EVENT_KEY
 	}
 	return 0; /* this return should be unreachable */
 }
-
-#include "window.c"
-#include "callback.c"
-#include "draw.c"

@@ -9,9 +9,11 @@
  */
 
 /*
- * called at the very beginning, should initialize the game.
+ * called before the window is initialized, should initialize the game's state.
+ * returns a LibertyConfig struct that describes the window that should be
+ * initialized.
  */
-void liberty_callback_init(void);
+LibertyConfig liberty_callback_init(void);
 
 /*
  * called at the very end, should cleanup after the game.
@@ -33,5 +35,6 @@ void liberty_callback_draw(void);
 /*
  * called when an event is recieved
  * returns a LibertySignal to ask the main thread to do things.
+ * parses raw SDL events cos there's no reason to add an abstraction layer.
  */
-LibertySignal liberty_callback_event(LibertyEvent event);
+LibertySignal liberty_callback_event(SDL_Event event);
