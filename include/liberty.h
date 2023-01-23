@@ -29,7 +29,7 @@ typedef struct {
 	LibertyKeybindState keybinds;
 } Liberty;
 
-#include "events.h" /* events shit */
 #include "init.h" /* initialization and cleanup */
 #include "callback.h" /* engine callbacks */
 #include "draw.h"
+#include "input.h"

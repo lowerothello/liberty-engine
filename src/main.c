@@ -20,6 +20,7 @@ static void privliberty_cleanup(int signal)
 int main(int argc, char *argv[])
 {
 	LIBERTY = liberty_callback_init();
+	SDL_Event event;
 
 	/* trap signals */
 	signal(SIGINT , privliberty_cleanup);
@@ -29,8 +30,21 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 		/* event */
-
-		privliberty_eventhandler();
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
+			{
+				case SDL_WINDOWEVENT:
+					switch (event.window.event)
+					{
+						case SDL_WINDOWEVENT_CLOSE: privliberty_cleanup(0);
+					} break;
+				case SDL_KEYDOWN:
+					break;
+				case SDL_KEYUP:
+					break;
+			}
+		}
 
 		/* update */
 		switch (liberty_callback_update(LIBERTY, SDL_GetTicks64()))
@@ -47,4 +61,4 @@ int main(int argc, char *argv[])
 #include "init.c"
 #include "callback.c"
 #include "draw/draw.c"
-#include "events.c"
+#include "input.c"

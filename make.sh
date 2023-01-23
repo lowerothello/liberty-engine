@@ -6,29 +6,29 @@ shared="-shared -fPIC"
 
 # $(pkg-config --libs --cflags jack) \
 [ "$1" = "pg" ] && {
-	time gcc -o build/libliberty.so -O0 \
+	time gcc -o libliberty.so -O0 \
 		-lm $libs $warnings -g -pg $shared \
 		src/main.c 2>&1
 	time gcc -o libertytest -O0 \
-		-lm $libs -Lbuild -lliberty $warnings -g -pg \
+		-lm $libs -L. -lliberty $warnings -g -pg \
 		test/main.c 2>&1
 	return
 }
 
 [ "$1" ] && {
-	time ${CC:-gcc} -o build/libliberty.so -O$1 \
+	time ${CC:-gcc} -o libliberty.so -O$1 \
 		-lm $libs $warnings -g $shared \
 		src/main.c 2>&1
 	time ${CC:-gcc} -o libertytest -O$1 \
-		-lm $libs -Lbuild -lliberty $warnings -g \
+		-lm $libs -L. -lliberty $warnings -g \
 		test/main.c 2>&1
 	return
 }
 
-time ${CC:-gcc} -o build/libliberty.so -O0 \
+time ${CC:-gcc} -o libliberty.so -O0 \
 	-lm $libs $warnings -g $shared \
 	src/main.c 2>&1
 time ${CC:-gcc} -o libertytest -O0 \
-	-lm $libs -Lbuild -lliberty $warnings -g \
+	-lm $libs -L. -lliberty $warnings -g \
 	test/main.c 2>&1
 return
