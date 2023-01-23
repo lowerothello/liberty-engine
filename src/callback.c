@@ -11,5 +11,13 @@
 // 		LIBERTY_DEFAULT_HEIGHT,
 // 		LIBERTY_DEFAULT_FRAMERATE);
 void liberty_callback_init(void) { }
-LibertySignal liberty_callback_update(double deltatime) { return LIBERTY_SIGNAL_OK; }
-void liberty_callback_draw(void) { }
+void liberty_callback_cleanup(void) { }
+
+LibertySignal liberty_callback_update(double deltatime)
+{ return LIBERTY_SIGNAL_OK; }
+
+void liberty_callback_draw(void)
+{ }
+
+LibertySignal liberty_callback_event(LibertyEvent event)
+{ return LIBERTY_SIGNAL_OK; }

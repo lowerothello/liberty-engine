@@ -15,6 +15,8 @@
 #include <SDL.h>
 
 
+#include "window.h"
+#include "event.h"    /* required by "callback.h" */
+#include "signal.h"   /* required by "callback.h" */
 #include "callback.h" /* engine callbacks */
 #include "draw.h"
-#include "input.h"

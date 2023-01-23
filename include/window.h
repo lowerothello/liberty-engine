@@ -41,4 +41,4 @@ void liberty_resize_window(LibertyWindow *lwin,
 /* destroy a liberty window.
  *   .lwin is the window to destroy, it is invalidated by this function.
  */
-void liberty_destroy_window(LibertyWindow *lwin)
+void liberty_destroy_window(LibertyWindow *lwin);
