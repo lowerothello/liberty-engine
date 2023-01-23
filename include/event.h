@@ -1,12 +1,13 @@
 typedef enum {
 	LIBERTY_EVENT_NULL = 0, /* unused */
-	LIBERTY_EVENT_KEY,
+	/* LibertyKey */
+	LIBERTY_EVENT_KEYPRESS,
+	LIBERTY_EVENT_KEYRELEASE,
+	LIBERTY_EVENT_KEYREPEAT,
 } LibertyEventType;
 
 typedef struct {
 	LibertyEventType type;
-	uint8_t          release; /* true if the key was released */
-	uint8_t          repeat;  /* true if this is a key repeat */
 	SDL_Keycode      keycode;
 } LibertyKey;
 

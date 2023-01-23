@@ -81,11 +81,9 @@ LOG("starting the main game loop\n");
 				case SDL_KEYDOWN: /* fall through */
 				case SDL_KEYUP: {
 						LibertyEvent le;
-						le.type = LIBERTY_EVENT_KEY;
-						le.key.release = event.type == SDL_KEYUP ? 1 : 0;
-						le.key.repeat = event.key.repeat;
+						le.type = event.key.repeat ? LIBERTY_EVENT_KEYREPEAT : (event.type == SDL_KEYUP ? LIBERTY_EVENT_KEYRELEASE : LIBERTY_EVENT_KEYPRESS);
 						le.key.keycode = event.key.keysym.sym;
-LOG("key %s %s\n", SDL_GetKeyName(le.key.keycode), le.key.release ? "released" : "pressed");
+LOG("key %s %s\n", SDL_GetKeyName(le.key.keycode), (le.type == LIBERTY_EVENT_KEYREPEAT) ? "repeated" : ((le.type == LIBERTY_EVENT_KEYRELEASE) ? "released" : "pressed"));
 						handle_signal(liberty_callback_event(le));
 					} break;
 			}
