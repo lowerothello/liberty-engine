@@ -1,4 +1,4 @@
-static void liberty_update_frametime(Liberty *l)
+static void update_frametime(LibertyWindow *l)
 {
 	if (!l->framerate)
 		l->frametime = 0.0f; /* avoid divide by 0 */
@@ -6,25 +6,23 @@ static void liberty_update_frametime(Liberty *l)
 		l->frametime = (1.0f / (float)l->framerate) * 1000.0f; /* based around milliseconds */
 }
 
-Liberty *liberty_init(const char *title,
+Liberty *liberty_create_window(const char *title,
 		uint8_t scale,
 		uint16_t width,
 		uint16_t height,
 		uint16_t framerate)
 {
-	Liberty *l = calloc(1, sizeof(Liberty));
-	SDL_Init(SDL_INIT_EVERYTHING);
-	l->scale = scale;
-	l->width = width;
-	l->height = height;
-	l->framerate = framerate;
+	Liberty *lwin = calloc(1, sizeof(Liberty));
+	lwin->scale = scale;
+	lwin->width = width;
+	lwin->height = height;
+	lwin->framerate = framerate;
 	liberty_update_frametime(l);
 	l->window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width*scale, height*scale, 0);
-	SDL_DisableScreenSaver();
 	return l;
 }
 
-void liberty_resize(Liberty *l,
+void liberty_resize_window(LibertyWindow *lwin,
 		const char *title,
 		uint8_t scale,
 		uint16_t width,
@@ -38,4 +36,10 @@ void liberty_resize(Liberty *l,
 	l->framerate = framerate;
 	liberty_update_frametime(l);
 	SDL_SetWindowSize(l->window, width*scale, height*scale);
+}
+
+void liberty_destroy_window(LibertyWindow *lwin)
+{
+	SDL_DestroyWindow(lwin->window);
+	free(lwin);
 }

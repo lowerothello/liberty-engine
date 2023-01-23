@@ -3,29 +3,38 @@
 #include <SDL.h>
 #include "../include/liberty.h"
 
-Liberty *LIBERTY;
+/* define a lil' logging macro */
+#ifdef LIBERTY_DEBUG
+#define LOG(...) fprintf(stderr, __VA_ARGS__);
+#else
+#define LOG(...) do { } while(0);
+#endif
 
-static void privliberty_cleanup(int signal)
+static void cleanup(int signal)
 {
-	if (LIBERTY)
-	{
-		SDL_DestroyWindow(LIBERTY->window);
-		SDL_VideoQuit();
-		SDL_Quit();
-		free(LIBERTY);
-	}
+LOG("quitting SDL...\n");
+	SDL_Quit();
+LOG("SDL quit\n");
+LOG("baiii!\n");
 	exit(signal);
 }
 
 int main(int argc, char *argv[])
 {
-	LIBERTY = liberty_callback_init();
 	SDL_Event event;
+	uint64_t lasttime = 0, nowtime = SDL_GetPerformanceCounter();
+	float deltatime;
+LOG("welcome to liberty!\n");
 
-	/* trap signals */
-	signal(SIGINT , privliberty_cleanup);
-	signal(SIGTERM, privliberty_cleanup);
+LOG("initializing SDL...\n");
+	SDL_Init(SDL_INIT_EVERYTHING);
+LOG("SDL initialized\n");
 
+LOG("trapping signals\n");
+	signal(SIGINT , cleanup);
+	signal(SIGTERM, cleanup);
+
+LOG("starting the main game loop\n");
 	/* main game loop */
 	while (1)
 	{
@@ -37,7 +46,7 @@ int main(int argc, char *argv[])
 				case SDL_WINDOWEVENT:
 					switch (event.window.event)
 					{
-						case SDL_WINDOWEVENT_CLOSE: privliberty_cleanup(0);
+						case SDL_WINDOWEVENT_CLOSE: cleanup(0);
 					} break;
 				case SDL_KEYDOWN:
 					break;
@@ -47,18 +56,31 @@ int main(int argc, char *argv[])
 		}
 
 		/* update */
-		switch (liberty_callback_update(LIBERTY, SDL_GetTicks64()))
+		lasttime = nowtime;
+		nowtime = SDL_GetPerformanceCounter();
+		deltatime = (nowtime - lasttime)*1000 / (float)SDL_GetPerformanceFrequency();
+LOG("updating: %ldms, %.6fΔ...\n", SDL_GetTicks64(), deltatime);
+		switch (liberty_callback_update(deltatime))
 		{
-			case LIBERTY_SIGNAL_OK: break;
-			case LIBERTY_SIGNAL_TERM: privliberty_cleanup(0);
+			case LIBERTY_SIGNAL_OK:
+LOG("update OK\n");
+				break;
+			case LIBERTY_SIGNAL_TERM:
+LOG("update TERM\n");
+				cleanup(0);
+				break;
+			case LIBERTY_SIGNAL_DRAW:
+LOG("update DRAW\n");
+LOG("drawing frame...\n");
+				/* TODO: draw */
+LOG("finished drawing\n");
+				break;
 		}
 
-		/* TODO: draw */
 	}
-	return 0;
+	return 0; /* this return should be unreachable */
 }
 
-#include "init.c"
 #include "callback.c"
-#include "draw/draw.c"
+#include "draw.c"
 #include "input.c"
