@@ -4,7 +4,7 @@
 #   compile a debug build:   $ ./make.sh debug
 #   compile a release build: $ ./make.sh
 
-libs="$(pkg-config --libs --cflags sdl2)"
+libs="$(pkg-config --libs --cflags sdl3)"
 warnings='-Wall'
 shared="-shared -fPIC"
 debug="-g -pg"

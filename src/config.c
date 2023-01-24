@@ -20,5 +20,5 @@ void liberty_set_config(LibertyConfig config)
 /* reapplies Config where it is relevant */
 void reapply_config(void)
 {
-	resize_window(Window, Config);
+	resize_window(Config);
 }

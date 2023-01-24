@@ -12,11 +12,12 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <SDL.h>
 
 /* public headers */
 #include "config.h"
-// #include "event.h"    /* required by "callback.h" */
 #include "signal.h"   /* required by "callback.h" */
 #include "callback.h" /* engine callbacks */
 #include "draw.h"
