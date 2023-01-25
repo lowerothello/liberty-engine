@@ -1,16 +1,15 @@
 /* stub callback definitions */
-#define LIBERTY_DEFAULT_TITLE "Liberty"
-#define LIBERTY_DEFAULT_SCALE 1
-#define LIBERTY_DEFAULT_WIDTH 640
-#define LIBERTY_DEFAULT_HEIGHT 480
 
 LibertyConfig liberty_callback_init(void)
 {
 	LibertyConfig ret;
-	ret.title = LIBERTY_DEFAULT_TITLE;
-	ret.scale = LIBERTY_DEFAULT_SCALE;
-	ret.width = LIBERTY_DEFAULT_WIDTH;
-	ret.height = LIBERTY_DEFAULT_HEIGHT;
+	ret.title = "Liberty";
+	ret.scale = 1;
+	ret.width = 640;
+	ret.height = 480;
+	ret.framerate = 60.0f;
+	ret.fullscreen = 0;
+	ret.vsync = 0;
 	return ret;
 }
 
@@ -19,17 +18,21 @@ void liberty_callback_cleanup(void) { }
 LibertySignal liberty_callback_update(double deltatime)
 { return LIBERTY_SIGNAL_OK; }
 
-void liberty_callback_draw(void)
-{ }
+void liberty_callback_draw(SDL_Renderer *renderer)
+{
+	SDL_SetRenderDrawColor(renderer, 0xff,0xff,0xff,0xff);
+	SDL_RenderClear(renderer);
+	SDL_RenderPresent(renderer);
+}
 
 /* more sophisticated stub handler as an example */
 LibertySignal liberty_callback_event(SDL_Event event)
 {
 	switch (event.type)
 	{
-		case SDL_KEYDOWN: /* fall through */
-		case SDL_KEYUP:
-LOG("key %s %s\n", SDL_GetKeyName(event.key.keysym.sym), event.key.repeat ? "repeated" : (event.type == SDL_KEYUP ? "released" : "pressed"));
+		case SDL_EVENT_KEY_DOWN: /* fall through */
+		case SDL_EVENT_KEY_UP:
+LOG("key %s %s\n", SDL_GetKeyName(event.key.keysym.sym), event.key.repeat ? "repeated" : (event.type == SDL_EVENT_KEY_UP ? "released" : "pressed"));
 			break;
 	}
 	return LIBERTY_SIGNAL_OK;

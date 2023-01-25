@@ -10,8 +10,7 @@
 
 /*
  * called before the window is initialized, should initialize the game's state.
- * returns a LibertyConfig struct that describes the window that should be
- * initialized.
+ * returns a LibertyConfig struct that describes the window that should be initialized.
  */
 LibertyConfig liberty_callback_init(void);
 
@@ -29,8 +28,9 @@ LibertySignal liberty_callback_update(double deltatime);
 
 /*
  * called when a new frame should be drawn.
+ * .renderer is the SDL_Renderer that should be drawn to.
  */
-void liberty_callback_draw(void);
+void liberty_callback_draw(SDL_Renderer *renderer);
 
 /*
  * called when an event is recieved

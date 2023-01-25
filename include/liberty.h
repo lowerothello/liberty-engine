@@ -11,6 +11,7 @@
  * code.
  */
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,4 +21,4 @@
 #include "config.h"
 #include "signal.h"   /* required by "callback.h" */
 #include "callback.h" /* engine callbacks */
-#include "draw.h"
+#include "font.h"

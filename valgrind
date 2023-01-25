@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+./make.sh g # ensure the latest debug build
+
+echo starting valgrind
+LD_LIBRARY_PATH=output valgrind \
+	--log-file=valgrind.log \
+	--leak-check=full \
+	output/libertytest "$@"
+echo stopping valgrind

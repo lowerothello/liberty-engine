@@ -1,3 +1,5 @@
 output/libliberty.so
 output/libertytest
 gmon.out
+log
+valgrind.log
