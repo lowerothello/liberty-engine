@@ -88,8 +88,7 @@ int main(int argc, char *argv[])
 	SDL_Event event;
 LOG("welcome to liberty!\n");
 
-LOG("setting Config from liberty_callback_init\n");
-	Config = liberty_callback_init();
+	Config = liberty_default_config;
 
 LOG("initializing SDL\n");
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -103,6 +102,9 @@ LOG("trapping signals\n");
 
 LOG("initializing Window\n");
 	create_window();
+
+LOG("calling liberty_callback_init\n");
+	liberty_callback_init();
 
 LOG("starting the main game loop\n");
 	/* main game loop */

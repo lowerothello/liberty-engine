@@ -1,14 +1,15 @@
-#define SDL_WINDOW_FLAGS 0
+#define SDL_WINDOW_FLAGS SDL_WINDOW_RESIZABLE
 /* allocates Window and Renderer */
 void create_window(void)
 {
 	/* TODO: proper fullscreen modesetting */
 	SDL_CreateWindowAndRenderer(
-			Config.width*Config.scale,
-			Config.height*Config.scale,
-			SDL_WINDOW_FLAGS | (Config.fullscreen && SDL_WINDOW_FULLSCREEN),
+			Config.width,
+			Config.height,
+			SDL_WINDOW_FLAGS,
 			&Window,
 			&Renderer);
+	SDL_SetWindowFullscreen(Window, Config.fullscreen);
 	SDL_SetRenderLogicalSize(Renderer, Config.width, Config.height);
 	SDL_SetRenderIntegerScale(Renderer, 1);
 	SDL_SetRenderVSync(Renderer, Config.vsync);
@@ -25,8 +26,9 @@ LOG("resizing SDL_Window* %p\n", Window);
 	SDL_SetWindowTitle(Window, Config.title);
 	SDL_SetWindowFullscreen(Window, Config.fullscreen);
 	SDL_SetWindowSize(Window,
-			Config.width*Config.scale,
-			Config.height*Config.scale);
+			Config.width,
+			Config.height);
+	SDL_SetRenderLogicalSize(Renderer, Config.width, Config.height);
 	SDL_SetRenderVSync(Renderer, Config.vsync);
 }
 

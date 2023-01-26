@@ -2,17 +2,15 @@
  * LIBERTY CALLBACKS
  *   These are defined as stubs by liberty, and
  *   are expected to be redefined by the game.
- *   You probably want to redefine at least:
- *    - liberty_callback_init
- *    - liberty_callback_update
- *    - liberty_callback_draw
  */
 
+/* config the window is initialized with */
+const LibertyConfig liberty_default_config;
+
 /*
- * called before the window is initialized, should initialize the game's state.
- * returns a LibertyConfig struct that describes the window that should be initialized.
+ * called just after the window has been initialized, should initialize the game state.
  */
-LibertyConfig liberty_callback_init(void);
+void liberty_callback_init(void);
 
 /*
  * called at the very end, should cleanup after the game.

@@ -79,29 +79,25 @@ static int read_bdf_number(int *dest, FILE *fp, const char *delimiter)
 	return ret;
 }
 
-static void draw_hex_bitmap(char *string, SDL_Surface *surface, size_t offset)
-{
-	long integer = strtol(string, NULL, 16);
+// static void read_hex_bitmap(char *string, LibertyGlyph *glyph, int y)
+// {
+// 	long integer = strtol(string, NULL, 16);
+//
+// 	size_t bits = strlen(string)*4; /* every bit */
+// 	for (size_t i = 0; i < bits; i++)
+// 		if (integer&(1<<(bits - (i+1)))) { LOG("█"); }
+// 		else                             { LOG(" "); }
+// }
 
-	size_t bits = strlen(string)*4; /* every bit */
-	for (size_t i = 0; i < bits; i++)
-		if (integer&(1<<(bits - (i+1))))
-		{ LOG("█"); }
-		else
-		{ LOG(" "); }
-
-	memcpy(&((char*)surface->pixels)[offset], &integer, strlen(string)>>1);
-}
-
-/* returns the glyph width */
 /* font->h is expected to be correct */
-static size_t parse_bdf_char(LibertyFont *font, SDL_Surface *surface, FILE *fp, size_t offset)
+static void parse_bdf_char(LibertyFont *font, FILE *fp)
 {
 	char *keyword;
 	char *hexline;
 	int index = 0;
-	int ret;
-	SDL_Rect bbx;
+	int ret; /* TODO: should probably return this */
+	long integer;
+	int i, j;
 
 	/* position the file pointer after the startchar line */
 	read_file_until_string(fp, "STARTCHAR"); read_file_until_ifs(NULL, fp, "\n");
@@ -109,7 +105,7 @@ LOG("BDF: STARTCHAR\n");
 
 	while (1)
 	{
-		ret = read_file_until_ifs(&keyword, fp, " \n"); /* get the keyword by reading until the first space */
+		ret = read_file_until_ifs(&keyword, fp, " \n"); /* get the keyword by reading until the first whitespace */
 
 		if (!strcmp(keyword, "ENCODING"))
 		{
@@ -117,23 +113,42 @@ LOG("BDF: STARTCHAR\n");
 LOG("BDF: ENCODING '%c'\n", index);
 		} else if (!strcmp(keyword, "BBX"))
 		{
-			ret = read_bdf_number(&bbx.w, fp, " \n" );
-			ret = read_bdf_number(&bbx.h, fp, " \n" );
-			ret = read_bdf_number(&bbx.x, fp, " \n" );
-			ret = read_bdf_number(&bbx.y, fp, " \n" );
-LOG("BDF: BBX: w=%d h=%d x=%d y=%d\n", bbx.w, bbx.h, bbx.x, bbx.y);
+			ret = read_bdf_number(&font->glyph[index].bbx.w, fp, " \n" );
+			ret = read_bdf_number(&font->glyph[index].bbx.h, fp, " \n" );
+			ret = read_bdf_number(&font->glyph[index].bbx.x, fp, " \n" );
+			ret = read_bdf_number(&font->glyph[index].bbx.y, fp, " \n" );
 			if (ret != '\n') read_file_until_ifs(NULL, fp, "\n");
+			font->glyph[index].bbx.y = font->h - (font->glyph[index].bbx.y + font->glyph[index].bbx.h);
+LOG("BDF: BBX: w=%d h=%d x=%d y=%d\n",
+	font->glyph[index].bbx.w, font->glyph[index].bbx.h,
+	font->glyph[index].bbx.x, font->glyph[index].bbx.y);
 		} else if (!strcmp(keyword, "BITMAP"))
 		{
 LOG("BDF: BITMAP\n");
 			if (ret != '\n') read_file_until_ifs(NULL, fp, "\n");
-			for (int i = 0; i < bbx.h; i++)
+
+			/* oversized buffer */
+			font->glyph[index].points = malloc(sizeof(SDL_FPoint) * font->glyph[index].bbx.w * font->glyph[index].bbx.h);
+			font->glyph[index].count = 0;
+
+			for (i = 0; i < font->glyph[index].bbx.h; i++)
 			{
 				read_file_until_ifs(&hexline, fp, "\n");
-				draw_hex_bitmap(hexline, surface, surface->pitch*i + offset);
+				// read_hex_bitmap(hexline, &font->glyph[index], i);
+				integer = strtol(hexline, NULL, 16);
+
+				for (j = 0; j < strlen(hexline)<<2; j++)
+					if (integer&(1<<((strlen(hexline)<<2) - (j+1))))
+					{ LOG("█");
+						font->glyph[index].points[font->glyph[index].count].x = j;
+						font->glyph[index].points[font->glyph[index].count].y = i;
+						font->glyph[index].count++;
+					}
+					else { LOG(" "); }
 LOG("\n");
 				free(hexline);
 			}
+			font->glyph[index].points = realloc(font->glyph[index].points, sizeof(SDL_FPoint) * font->glyph[index].count);
 LOG("\n\n");
 		} else if (!strcmp(keyword, "ENDCHAR"))
 		{
@@ -145,31 +160,6 @@ LOG("BDF: ENDCHAR\n");
 			if (ret != '\n') read_file_until_ifs(NULL, fp, "\n");
 		free(keyword);
 	}
-
-	if (index)
-	{
-		font->glyph[index].bbx = bbx;
-		font->glyph[index].offset = offset>>3; /* offset * 8 */
-	}
-	return (bbx.w>>3) + 1;
-}
-
-/* returns the glyph width */
-static int get_bdf_char_width(LibertyFont *font, FILE *fp)
-{
-	int w;
-
-	/* position the file pointer after the startchar line */
-	read_file_until_string(fp, "STARTCHAR"); read_file_until_ifs(NULL, fp, "\n");
-	read_file_until_string(fp, "BBX ");
-
-	/* only care about width */
-	read_bdf_number(&w, fp, " ");
-
-	read_file_until_string(fp, "ENDCHAR"); read_file_until_ifs(NULL, fp, "\n");
-
-	/* round w up to the nearest multiple of 8 */
-	return ((w>>3) + 1)<<3;
 }
 
 /* returns EOF when the end of the file is reached and 0 otherwise */
@@ -195,28 +185,9 @@ LOG("BDF: CHARS\n");
 			int i, charcount;
 			read_bdf_number(&charcount, fp, "\n");
 LOG("BDF: %d glyphs in font\n", charcount);
-			long fptr = ftell(fp);
 
-			/* get the width of the texture */
-			font->w = 0;
 			for (i = 0; i < charcount; i++)
-				font->w += get_bdf_char_width(font, fp);
-
-			SDL_Surface *surface = SDL_CreateSurface(font->w, font->h, SDL_PIXELFORMAT_INDEX1MSB);
-LOG("BDF: created SDL_Surface* %p, with size %d x %d\n", surface, font->w, font->h);
-
-			fseek(fp, fptr, SEEK_SET);
-
-			size_t offset = 0;
-			for (i = 0; i < charcount; i++)
-				offset += parse_bdf_char(font, surface, fp, offset);
-			font->texture = SDL_CreateTextureFromSurface(Renderer, surface);
-			if (!font->texture) SDL_ERR();
-			uint32_t format = 0;
-			int ret = SDL_QueryTexture(font->texture, &format, NULL, NULL, NULL);
-			if (!ret) SDL_ERR();
-LOG("BDF: created SDL_Texture with format 0x%x\n", format);
-			SDL_DestroySurface(surface); surface = NULL;
+				parse_bdf_char(font, fp);
 		} else if (!strcmp(keyword, "ENDFONT"))
 		{
 LOG("BDF: ENDFONT\n");
@@ -237,16 +208,21 @@ LOG("BDF: ENDFONT\n");
 
 LibertyFont *liberty_new_font_from_file(const char *path)
 {
+	if (!Renderer)
+	{
+		LOG("BDF: failed to open font\n");
+		return NULL;
+	}
 LOG("BDF: opening file %s\n", path);
 	FILE *fp = fopen(path, "r");
 	if (!fp)
 	{
 LOG("file %s doesn't exist\n", path);
-LOG("BDF: failed to read file\n");
+LOG("BDF: failed to open font\n");
 		return NULL;
 	}
 
-	LibertyFont *ret = malloc(sizeof(LibertyFont));
+	LibertyFont *ret = calloc(1, sizeof(LibertyFont));
 	parse_bdf_line(ret, fp);
 LOG("BDF: finished reading font\n");
 LOG("BDF: read file %s into LibertyFont* %p\n", path, ret);
@@ -260,6 +236,50 @@ void liberty_free_font(LibertyFont *font)
 LOG("BDF: freeing font %s\n", font->name);
 
 	if (font->name) free(font->name);
-	// if (font->texture) SDL_DestroyTexture(font->texture);
+	for (size_t i = 0; i < 128; i++)
+	{
+LOG("BDF: freeing glyph '%c' %p\n", (char)i, font->glyph[i].points);
+		if (font->glyph[i].points)
+			free(font->glyph[i].points);
+	}
 	free(font);
+}
+
+SDL_Point liberty_font_char(LibertyFont *font, int glyph, SDL_Point pos)
+{
+	SDL_Rect viewport;
+	if (!font) return pos;
+	switch (glyph)
+	{
+		case ' ':
+			pos.x += font->h>>1;
+			return pos;
+		case '\t':
+			pos.x += font->h<<1;
+			return pos;
+		case '\n': /* TODO: carriage return? not sure how */
+			pos.y += font->h;
+			return pos;
+		default:
+			if (!font->glyph[glyph].points) return pos;
+
+			viewport.x = pos.x + font->glyph[glyph].bbx.x;
+			viewport.y = pos.y + font->glyph[glyph].bbx.y;
+			viewport.w = font->glyph[glyph].bbx.w;
+			viewport.h = font->glyph[glyph].bbx.h;
+			SDL_SetRenderViewport(Renderer, &viewport);
+			// SDL_RenderPoint(Renderer, 1.0f, 1.0f);
+			SDL_RenderPoints(Renderer, font->glyph[glyph].points, font->glyph[glyph].count);
+			SDL_SetRenderViewport(Renderer, NULL);
+			pos.x += font->glyph[glyph].bbx.x + font->glyph[glyph].bbx.w;
+			return pos;
+	}
+}
+
+SDL_Point liberty_font_string(LibertyFont *font, char *string, SDL_Point pos)
+{
+	for (size_t i = 0; i < strlen(string); i++)
+		pos = liberty_font_char(font, string[i], pos);
+
+	return pos;
 }

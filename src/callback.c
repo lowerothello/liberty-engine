@@ -1,17 +1,9 @@
 /* stub callback definitions */
 
-LibertyConfig liberty_callback_init(void)
-{
-	LibertyConfig ret;
-	ret.title = "Liberty";
-	ret.scale = 1;
-	ret.width = 640;
-	ret.height = 480;
-	ret.framerate = 60.0f;
-	ret.fullscreen = 0;
-	ret.vsync = 0;
-	return ret;
-}
+const LibertyConfig liberty_default_config =
+{ "Liberty", 320, 240, 0, 0, 0.0f, };
+
+void liberty_callback_init(void) { }
 
 void liberty_callback_cleanup(void) { }
 
