@@ -22,9 +22,10 @@ SDL_Renderer *Renderer;
 #include "window.c"
 
 /* public source */
+#include "config.c"
 #include "callback.c"
 #include "font.c"
-#include "config.c"
+#include "layer.c"
 
 /* prototypes */
 static void cleanup(int signal);
@@ -101,7 +102,7 @@ LOG("trapping signals\n");
 	signal(SIGTERM, cleanup);
 
 LOG("initializing Window\n");
-	create_window();
+	if (create_window()) cleanup(0);
 
 LOG("calling liberty_callback_init\n");
 	liberty_callback_init();

@@ -2,6 +2,8 @@
  * LIBERTY GAME ENGINE
  */
 
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 /*
  * working with liberty:
@@ -23,3 +25,4 @@
 #include "signal.h"   /* required by "callback.h" */
 #include "callback.h" /* engine callbacks */
 #include "font.h"
+#include "layer.h"
