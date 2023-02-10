@@ -5,7 +5,7 @@
  */
 
 /* config the window is initialized with */
-const LibertyConfig liberty_default_config;
+LibertyConfig liberty_default_config;
 
 /*
  * called just after the window has been initialized, should initialize the game state.
@@ -26,9 +26,9 @@ LibertySignal liberty_callback_update(double deltatime);
 
 /*
  * called when a new frame should be drawn.
- * .renderer is the SDL_Renderer that should be drawn to.
+ * .frametime is how many seconds have passed since the last draw call.
  */
-void liberty_callback_draw(SDL_Renderer *renderer);
+void liberty_callback_draw(double frametime);
 
 /*
  * called when an event is recieved

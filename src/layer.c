@@ -1,7 +1,7 @@
-SDL_Texture *liberty_new_layer(void)
+SDL_Texture *liberty_new_screen_texture(SDL_Renderer *r)
 {
 	SDL_RendererInfo info;
-	SDL_GetRendererInfo(Renderer, &info);
-	return SDL_CreateTexture(Renderer, info.texture_formats[0],
+	SDL_GetRendererInfo(r, &info);
+	return SDL_CreateTexture(r, info.texture_formats[0],
 			SDL_TEXTUREACCESS_TARGET, Config.width, Config.height);
 }

@@ -10,16 +10,20 @@
 #define LOG(...) do { } while(0);
 #endif
 
-#define SDL_ERR() fprintf(stderr, "ERROR: %s\n", SDL_GetError());
+// #define SDL_ERR() fprintf(stderr, "ERROR: %s\n", SDL_GetError());
+#define ERR(s1) fprintf(stderr, "ERROR: %s\n", s1);
 
 /* private globals */
 LibertyConfig Config;
 SDL_Window   *Window;
-SDL_Renderer *Renderer;
+SDL_Renderer *Renderer; /* TODO: remove */
 
 /* private source */
+#include "maths.c"
 #include "events.c"
-#include "window.c"
+
+#include "sdl/window.c"
+#include "sdl/draw.c"
 
 /* public source */
 #include "config.c"
@@ -42,17 +46,16 @@ LOG("calling liberty_callback_cleanup\n");
 LOG("quitting SDL...\n");
 	SDL_Quit();
 LOG("SDL quit\n");
-LOG("baiii!\n");
 	exit(signal);
 }
 
 static void update(void)
 {
 	static uint64_t lasttime, nowtime;
-	static float frametime;
+	static double frametime;
 	lasttime = nowtime;
 	nowtime = SDL_GetPerformanceCounter();
-	float deltatime = (nowtime - lasttime)*1000 / (float)SDL_GetPerformanceFrequency();
+	double deltatime = (nowtime - lasttime) / (double)SDL_GetPerformanceFrequency();
 // LOG("updating: %ldms, %.6fΔ...\n", SDL_GetTicks64(), deltatime);
 	handle_signal(liberty_callback_update(deltatime));
 	if (Config.framerate < 1.0f) /* unlimited framerate */
@@ -60,7 +63,7 @@ static void update(void)
 	else
 	{
 		frametime += deltatime;
-		float targetframetime = 1.0f / Config.framerate; /* TODO: doesn't need to be calculated every tick */
+		double targetframetime = 1.0 / Config.framerate;
 		if (frametime > targetframetime)
 		{
 			frametime -= targetframetime;
@@ -71,7 +74,11 @@ static void update(void)
 
 static void draw(void)
 {
-	liberty_callback_draw(Renderer);
+	static uint64_t nowtime, lasttime;
+	lasttime = nowtime;
+	nowtime = SDL_GetPerformanceCounter();
+	liberty_callback_draw((nowtime - lasttime) / (double)SDL_GetPerformanceFrequency());
+	liberty_show_frame();
 }
 
 static void handle_signal(LibertySignal signal)
@@ -132,8 +139,8 @@ LOG("applying new Config\n");
 					case SDL_EVENT_QUIT: /* fall through */
 					case SDL_EVENT_WINDOW_CLOSE_REQUESTED: cleanup(0);
 					case SDL_EVENT_WINDOW_SHOWN: /* fall through */
+					case SDL_EVENT_WINDOW_RESIZED: /* fall through */
 					case SDL_EVENT_WINDOW_EXPOSED: draw(); break;
-					// case SDL_EVENT_WINDOW_RESIZED: reapply_config(); break; /* reapply the window size if the window get's resized */
 					default:
 						handle_signal(liberty_callback_event(event));
 						break;

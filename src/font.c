@@ -183,11 +183,6 @@ LOG("BDF: ENDFONT\n");
 
 LibertyFont *liberty_new_font_from_file(const char *path)
 {
-	if (!Renderer)
-	{
-		LOG("BDF: failed to open font\n");
-		return NULL;
-	}
 LOG("BDF: opening file %s\n", path);
 	FILE *fp = fopen(path, "r");
 	if (!fp)
@@ -221,8 +216,11 @@ LOG("BDF: freeing glyph '%c' %p\n", (char)i, font->glyph[i].points);
 
 SDL_Point draw_font_char(LibertyFont *font, int glyph, SDL_Point pos, int cret, bool draw)
 {
-	SDL_Rect viewport;
-	if (!font) return pos;
+	if (!font)
+	{
+LOG("using uninitialized LibertyFont!\n");
+		return pos;
+	}
 	switch (glyph)
 	{
 		case ' ':
@@ -242,22 +240,24 @@ SDL_Point draw_font_char(LibertyFont *font, int glyph, SDL_Point pos, int cret, 
 			if (!font->glyph[glyph].points) return pos;
 
 			if (draw)
-			{
-				viewport.x = pos.x + font->glyph[glyph].bbx.x;
-				viewport.y = pos.y + font->glyph[glyph].bbx.y;
-				viewport.w = font->glyph[glyph].bbx.w;
-				viewport.h = font->glyph[glyph].bbx.h;
-				SDL_SetRenderViewport(Renderer, &viewport);
-				SDL_RenderPoints(Renderer, font->glyph[glyph].points, font->glyph[glyph].count);
-				SDL_SetRenderViewport(Renderer, NULL);
-			}
+				liberty_draw_pixels_offset(
+						font->glyph[glyph].points,
+						font->glyph[glyph].count,
+						(SDL_Point){pos.x + font->glyph[glyph].bbx.x, pos.y + font->glyph[glyph].bbx.y});
+
 			pos.x += font->glyph[glyph].bbx.x + font->glyph[glyph].bbx.w;
 			return pos;
 	}
 }
 
-SDL_Point liberty_draw_font_string(LibertyFont *font, char *string, SDL_Point pos)
+SDL_Point liberty_draw_font_string(LibertyFont *font, SDL_Point pos, char *string)
 {
+	if (!font)
+	{
+LOG("using uninitialized LibertyFont!\n");
+		return pos;
+	}
+
 	int cret = pos.x;
 	for (size_t i = 0; i < strlen(string); i++)
 		pos = draw_font_char(font, string[i], pos, cret, 1);
@@ -265,7 +265,7 @@ SDL_Point liberty_draw_font_string(LibertyFont *font, char *string, SDL_Point po
 	return pos;
 }
 
-SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, char *string, SDL_Point pos)
+SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, SDL_Point pos, char *string)
 {
 	SDL_Rect ret;
 	ret.x = pos.x;
@@ -274,11 +274,22 @@ SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, char *string, SDL_Point 
 	int cret = pos.x;
 	for (size_t i = 0; i < strlen(string); i++)
 	{
-		pos = draw_font_char(font, string[i], pos, cret, 0);
+		pos = draw_font_char(font, string[i], pos, cret, 0); /* doesn't draw */
 		ret.w = MAX(ret.w, pos.x - ret.x);
 		ret.h = MAX(ret.h, pos.y - ret.y);
 	}
 	ret.h += font->h;
 
 	return ret;
+}
+
+SDL_Point liberty_draw_font_string_outline(LibertyFont *font, SDL_Point pos, char *string)
+{
+	SDL_Rect rect = liberty_get_font_string_bbx(font, pos, string);
+	rect.x -= 1;
+	rect.y -= 1;
+	rect.w += 3;
+	rect.h += 2;
+	liberty_draw_rect(0, rect);
+	return liberty_draw_font_string(font, pos, string);
 }

@@ -1,7 +1,15 @@
 /* stub callback definitions */
 
-const LibertyConfig liberty_default_config =
-{ "Liberty", 320, 240, 0, 0, 0.0f, };
+LibertyConfig liberty_default_config =
+{
+	.title = "Liberty",
+	.width = 640,
+	.height = 480,
+	.scale = 1,
+	.fullscreen = 0,
+	.vsync = 0,
+	.framerate = 0.0f,
+};
 
 void liberty_callback_init(void) { }
 
@@ -10,12 +18,7 @@ void liberty_callback_cleanup(void) { }
 LibertySignal liberty_callback_update(double deltatime)
 { return LIBERTY_SIGNAL_OK; }
 
-void liberty_callback_draw(SDL_Renderer *renderer)
-{
-	SDL_SetRenderDrawColor(renderer, 0xff,0xff,0xff,0xff);
-	SDL_RenderClear(renderer);
-	SDL_RenderPresent(renderer);
-}
+void liberty_callback_draw(double frametime) { }
 
 /* more sophisticated stub handler as an example */
 LibertySignal liberty_callback_event(SDL_Event event)

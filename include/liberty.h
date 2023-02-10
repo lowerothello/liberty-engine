@@ -24,5 +24,7 @@
 #include "config.h"
 #include "signal.h"   /* required by "callback.h" */
 #include "callback.h" /* engine callbacks */
+#include "colour.h"   /* colours */
+#include "draw.h"     /* draw code */
 #include "font.h"
 #include "layer.h"

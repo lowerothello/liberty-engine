@@ -6,8 +6,9 @@ typedef struct LibertyConfig {
 	const char *title;
 	uint16_t    width;
 	uint16_t    height;
+	uint8_t     scale;
 	char        fullscreen; /* 0=windowed; SDL_WINDOW_FULLSCREEN=fullscreen; SDL_WINDOW_FULLSCREEN_DESKTOP=borderless */
-	char        vsync;
+	bool        vsync;
 	float       framerate; /* target framerate for draw calls, < 1.0f for unlimited */
 } LibertyConfig;
 
