@@ -8,8 +8,9 @@ void liberty_draw_clear(void)
 	SDL_RenderClear(Renderer);
 }
 
-static void liberty_show_frame(void)
+static void show_frame(void)
 {
+	liberty_set_draw_layer(NULL);
 	SDL_RenderPresent(Renderer);
 	liberty_set_colour((LibertyColour){0x00, 0x00, 0x00, 0xff});
 	liberty_draw_clear();

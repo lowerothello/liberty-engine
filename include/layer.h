@@ -1,3 +1,11 @@
+typedef void LibertyLayer; /* private pointer */
 
-/* create an SDL_Texture the size of the screen */
-SDL_Texture *liberty_new_screen_texture(SDL_Renderer *r);
+LibertyLayer *liberty_new_layer(void);
+void liberty_free_layer(LibertyLayer *layer);
+
+/* set to NULL to draw directly to the screen */
+void liberty_set_draw_layer(LibertyLayer *layer);
+
+/* dump a layer to the screen */
+void liberty_draw_layer(LibertyLayer *layer,
+		SDL_Point offset, LibertyColour tint);

@@ -293,3 +293,9 @@ SDL_Point liberty_draw_font_string_outline(LibertyFont *font, SDL_Point pos, cha
 	liberty_draw_rect(0, rect);
 	return liberty_draw_font_string(font, pos, string);
 }
+
+SDL_Point liberty_get_font_string_centre(LibertyFont *font, SDL_Rect rect, char *string)
+{
+	SDL_Rect bbx = liberty_get_font_string_bbx(font, (SDL_Point){0, 0}, string);
+	return (SDL_Point){rect.x + ((rect.w - bbx.w)>>1), rect.y + ((rect.h - bbx.h)>>1)};
+}

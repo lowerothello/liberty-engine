@@ -24,12 +24,12 @@ SDL_Renderer *Renderer; /* TODO: remove */
 
 #include "sdl/window.c"
 #include "sdl/draw.c"
+#include "sdl/layer.c"
 
 /* public source */
 #include "config.c"
 #include "callback.c"
 #include "font.c"
-#include "layer.c"
 
 /* prototypes */
 static void cleanup(int signal);
@@ -78,7 +78,7 @@ static void draw(void)
 	lasttime = nowtime;
 	nowtime = SDL_GetPerformanceCounter();
 	liberty_callback_draw((nowtime - lasttime) / (double)SDL_GetPerformanceFrequency());
-	liberty_show_frame();
+	show_frame();
 }
 
 static void handle_signal(LibertySignal signal)

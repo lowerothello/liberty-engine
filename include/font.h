@@ -29,3 +29,8 @@ SDL_Point liberty_draw_font_string_outline(LibertyFont *font, SDL_Point pos, cha
 
 /* get the bounding box needed to render a string in */
 SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, SDL_Point pos, char *string);
+
+SDL_Point liberty_get_font_string_centre(LibertyFont *font, SDL_Rect boundingbox, char *string);
+
+#define LIBERTY_DRAW_FONT_STRING_CENTRE(font, boundingbox, string) \
+	liberty_draw_font_string(font, liberty_get_font_string_centre(font, boundingbox, string), string);
