@@ -27,7 +27,7 @@ LibertySignal liberty_callback_event(SDL_Event event)
 	{
 		case SDL_EVENT_KEY_DOWN: /* fall through */
 		case SDL_EVENT_KEY_UP:
-LOG("key %s %s\n", SDL_GetKeyName(event.key.keysym.sym), event.key.repeat ? "repeated" : (event.type == SDL_EVENT_KEY_UP ? "released" : "pressed"));
+LOG("key %s %s\n", SDL_GetKeyName(event.key.keysym.sym), event.key.repeat ? "repeated" : ((event.type == SDL_EVENT_KEY_UP) ? "released" : "pressed"));
 			break;
 	}
 	return LIBERTY_SIGNAL_OK;

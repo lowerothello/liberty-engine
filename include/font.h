@@ -5,9 +5,9 @@
 
 typedef struct LibertyGlyph
 {
-	SDL_Rect    bbx;
-	int         count;
-	SDL_FPoint *points;
+	LibertyIntVec4  bbx;
+	int             count;
+	LibertyVec2    *points;
 } LibertyGlyph;
 typedef struct LibertyFont
 {
@@ -23,14 +23,14 @@ LibertyFont *liberty_new_font_from_file(const char *path);
 void liberty_free_font(LibertyFont *font);
 
 /* render a string using font .font */
-SDL_Point liberty_draw_font_string(LibertyFont *font, SDL_Point pos, char *string);
+LibertyVec2 liberty_draw_font_string(LibertyFont *font, LibertyVec2 pos, char *string);
 
-SDL_Point liberty_draw_font_string_outline(LibertyFont *font, SDL_Point pos, char *string);
+LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos, char *string);
 
 /* get the bounding box needed to render a string in */
-SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, SDL_Point pos, char *string);
+LibertyVec4 liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char *string);
 
-SDL_Point liberty_get_font_string_centre(LibertyFont *font, SDL_Rect boundingbox, char *string);
+LibertyVec2 liberty_get_font_string_centre(LibertyFont *font, LibertyVec4 rect, char *string);
 
-#define LIBERTY_DRAW_FONT_STRING_CENTRE(font, boundingbox, string) \
-	liberty_draw_font_string(font, liberty_get_font_string_centre(font, boundingbox, string), string);
+#define LIBERTY_DRAW_FONT_STRING_CENTRE(font, rect, string) \
+	liberty_draw_font_string(font, liberty_get_font_string_centre(font, rect, string), string);

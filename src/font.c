@@ -107,7 +107,7 @@ LOG("BDF: BITMAP\n");
 			if (ret != '\n') read_file_until_ifs(NULL, fp, "\n");
 
 			/* oversized buffer */
-			font->glyph[index].points = malloc(sizeof(SDL_FPoint) * font->glyph[index].bbx.w * font->glyph[index].bbx.h);
+			font->glyph[index].points = malloc(sizeof(LibertyVec2) * font->glyph[index].bbx.w * font->glyph[index].bbx.h);
 			font->glyph[index].count = 0;
 
 			for (i = 0; i < font->glyph[index].bbx.h; i++)
@@ -127,7 +127,7 @@ LOG("BDF: BITMAP\n");
 LOG("\n");
 				free(hexline);
 			}
-			font->glyph[index].points = realloc(font->glyph[index].points, sizeof(SDL_FPoint) * font->glyph[index].count);
+			font->glyph[index].points = realloc(font->glyph[index].points, sizeof(LibertyVec2) * font->glyph[index].count);
 LOG("\n\n");
 		} else if (!strcmp(keyword, "ENDCHAR"))
 		{
@@ -214,7 +214,7 @@ LOG("BDF: freeing glyph '%c' %p\n", (char)i, font->glyph[i].points);
 	free(font);
 }
 
-SDL_Point draw_font_char(LibertyFont *font, int glyph, SDL_Point pos, int cret, bool draw)
+LibertyVec2 draw_font_char(LibertyFont *font, int glyph, LibertyVec2 pos, int cret, bool draw)
 {
 	if (!font)
 	{
@@ -243,14 +243,14 @@ LOG("using uninitialized LibertyFont!\n");
 				liberty_draw_pixels_offset(
 						font->glyph[glyph].points,
 						font->glyph[glyph].count,
-						(SDL_Point){pos.x + font->glyph[glyph].bbx.x, pos.y + font->glyph[glyph].bbx.y});
+						(LibertyVec2){pos.x + font->glyph[glyph].bbx.x, pos.y + font->glyph[glyph].bbx.y});
 
 			pos.x += font->glyph[glyph].bbx.x + font->glyph[glyph].bbx.w;
 			return pos;
 	}
 }
 
-SDL_Point liberty_draw_font_string(LibertyFont *font, SDL_Point pos, char *string)
+LibertyVec2 liberty_draw_font_string(LibertyFont *font, LibertyVec2 pos, char *string)
 {
 	if (!font)
 	{
@@ -265,12 +265,13 @@ LOG("using uninitialized LibertyFont!\n");
 	return pos;
 }
 
-SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, SDL_Point pos, char *string)
+LibertyVec4 liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char *string)
 {
-	SDL_Rect ret;
+	LibertyVec4 ret;
 	ret.x = pos.x;
 	ret.y = pos.y;
-	ret.w = ret.h = 0;
+	ret.w = ret.h = 0.0f;
+
 	int cret = pos.x;
 	for (size_t i = 0; i < strlen(string); i++)
 	{
@@ -283,9 +284,9 @@ SDL_Rect liberty_get_font_string_bbx(LibertyFont *font, SDL_Point pos, char *str
 	return ret;
 }
 
-SDL_Point liberty_draw_font_string_outline(LibertyFont *font, SDL_Point pos, char *string)
+LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos, char *string)
 {
-	SDL_Rect rect = liberty_get_font_string_bbx(font, pos, string);
+	LibertyVec4 rect = liberty_get_font_string_bbx(font, pos, string);
 	rect.x -= 1;
 	rect.y -= 1;
 	rect.w += 3;
@@ -294,8 +295,8 @@ SDL_Point liberty_draw_font_string_outline(LibertyFont *font, SDL_Point pos, cha
 	return liberty_draw_font_string(font, pos, string);
 }
 
-SDL_Point liberty_get_font_string_centre(LibertyFont *font, SDL_Rect rect, char *string)
+LibertyVec2 liberty_get_font_string_centre(LibertyFont *font, LibertyVec4 rect, char *string)
 {
-	SDL_Rect bbx = liberty_get_font_string_bbx(font, (SDL_Point){0, 0}, string);
-	return (SDL_Point){rect.x + ((rect.w - bbx.w)>>1), rect.y + ((rect.h - bbx.h)>>1)};
+	LibertyVec4 bbx = liberty_get_font_string_bbx(font, (LibertyVec2){0, 0}, string);
+	return (LibertyVec2){rect.x + ((rect.w - bbx.w)*0.5f), rect.y + ((rect.h - bbx.h)*0.5f)};
 }

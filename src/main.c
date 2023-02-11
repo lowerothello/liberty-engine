@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <time.h>
 
 /* public headers */
 #include "../include/liberty.h"
@@ -19,7 +20,6 @@ SDL_Window   *Window;
 SDL_Renderer *Renderer; /* TODO: remove */
 
 /* private source */
-#include "maths.c"
 #include "events.c"
 
 #include "sdl/window.c"
@@ -66,7 +66,9 @@ static void update(void)
 		double targetframetime = 1.0 / Config.framerate;
 		if (frametime > targetframetime)
 		{
-			frametime -= targetframetime;
+			while (frametime > targetframetime)
+				frametime -= targetframetime;
+
 			draw();
 		}
 	}
@@ -110,6 +112,9 @@ LOG("trapping signals\n");
 
 LOG("initializing Window\n");
 	if (create_window()) cleanup(0);
+
+LOG("seeding rand()\n");
+	srand(time(NULL));
 
 LOG("calling liberty_callback_init\n");
 	liberty_callback_init();
