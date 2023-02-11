@@ -25,8 +25,7 @@ void liberty_draw_layer(LibertyLayer *layer,
 	SDL_SetTextureColorMod(layer, tint.r, tint.g, tint.b);
 	SDL_SetTextureAlphaMod(layer, tint.a);
 	SDL_Rect srcrect = {offset.x, offset.y, Config.width, Config.height};
-	SDL_FRect destrect = {0, 0, Config.width, Config.height};
-	SDL_RenderTexture(Renderer, layer, &srcrect, &destrect);
+	SDL_RenderTexture(Renderer, layer, &srcrect, NULL);
 }
 
 void liberty_draw_layer_row(LibertyLayer *layer, uint16_t row,

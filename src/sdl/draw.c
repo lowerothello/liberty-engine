@@ -37,6 +37,11 @@ void liberty_draw_pixels_offset(LibertyVec2 *points, int count, LibertyVec2 offs
 	SDL_SetRenderViewport(Renderer, NULL);
 }
 
+void liberty_draw_line(LibertyVec2 start, LibertyVec2 end)
+{
+	SDL_RenderLine(Renderer, start.x, start.y, end.x, end.y);
+}
+
 void liberty_draw_rect(bool fill, LibertyVec4 rect)
 {
 	if (fill) SDL_RenderFillRect(Renderer, (SDL_FRect*)&rect); /* compatible type */
