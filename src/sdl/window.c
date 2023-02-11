@@ -22,8 +22,7 @@ int create_window(void)
 	}
 	SDL_SetWindowFullscreen(Window, Config.fullscreen);
 	SDL_SetRenderVSync(Renderer, Config.vsync);
-	SDL_SetRenderLogicalSize(Renderer, Config.width, Config.height);
-	SDL_SetRenderIntegerScale(Renderer, 1);
+	SDL_SetRenderLogicalPresentation(Renderer, Config.width, Config.height, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE, SDL_SCALEMODE_NEAREST);
 	LOG("created SDL_Window* %p\n", Window);
 	LOG("created SDL_Renderer* %p\n", Renderer);
 	return 0;

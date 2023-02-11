@@ -99,7 +99,7 @@ void handle_accel(double deltatime, LibertyVec2 *accel,
 	if (accel->y < 0.0f) accel->y = MAX(accel->y + coef_friction*deltatime, -coef_max);
 }
 
-#define CAMERA_SPEED 30
+#define CAMERA_SPEED 20
 
 LibertySignal liberty_callback_update(double deltatime)
 {
