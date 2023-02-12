@@ -13,6 +13,7 @@ typedef struct LibertyFont
 {
 	char        *name;
 	int          h;
+	float        frame; /* used for animations */
 	LibertyGlyph glyph[128];
 } LibertyFont;
 
@@ -23,9 +24,10 @@ LibertyFont *liberty_new_font_from_file(const char *path);
 void liberty_free_font(LibertyFont *font);
 
 /* render a string using font .font */
-LibertyVec2 liberty_draw_font_string(LibertyFont *font, LibertyVec2 pos, char *string);
-
+LibertyVec2 liberty_draw_font_string        (LibertyFont *font, LibertyVec2 pos, char *string);
 LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos, char *string);
+
+void liberty_draw_font_animation(LibertyFont *font, LibertyVec2 pos, float rate);
 
 /* get the bounding box needed to render a string in */
 LibertyVec4 liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char *string);

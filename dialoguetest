@@ -1,0 +1,16 @@
+# comment
+tag start
+:
+	test 1
+
+:
+	test 2
+
+goto start
+tag testtag
+
+:
+	test 3
+
+:
+	test 4

@@ -1,58 +1,3 @@
-#define FILE_BUFFER_CHUNK_SIZE 256
-/* returns the last char read, which is always out of .ifs or EOF */
-/* .buffer is allowed to be NULL */
-static int read_file_until_ifs(char **buffer, FILE *fp, const char *ifs)
-{
-	size_t ptr = 0;
-	size_t ifsptr;
-	int byte = 0;
-	if (buffer) *buffer = malloc(FILE_BUFFER_CHUNK_SIZE);
-	while (1)
-	{
-		byte = fgetc(fp);
-		for (ifsptr = 0; ifsptr < strlen(ifs); ifsptr++)
-			if (byte == ifs[ifsptr])
-				goto byte_eof;
-
-		if (byte == EOF)
-		{
-byte_eof:
-			if (buffer) (*buffer)[ptr] = '\0';
-			break;
-		}
-
-		if (buffer)
-		{
-			(*buffer)[ptr] = byte;
-			ptr++;
-			if (!ptr%FILE_BUFFER_CHUNK_SIZE)
-				*buffer = realloc(*buffer, ptr+FILE_BUFFER_CHUNK_SIZE); /* allocate another chunk if needed */
-		}
-	}
-	if (buffer) *buffer = realloc(*buffer, strlen(*buffer)+1);
-	return byte;
-}
-
-static int read_file_until_string(FILE *fp, const char *end)
-{
-	size_t ptr = 0;
-	int byte = 0;
-	while (1)
-	{
-		byte = fgetc(fp);
-		if (byte == EOF)
-			return EOF;
-
-		if (byte == end[ptr])
-			ptr++;
-		else
-			ptr = 0;
-
-		if (ptr == strlen(end))
-			return 0;
-	}
-}
-
 static void read_bdf_string(char **dest, FILE *fp)
 {
 	read_file_until_ifs(NULL, fp, "\"");
@@ -221,33 +166,33 @@ LibertyVec2 draw_font_char(LibertyFont *font, int glyph, LibertyVec2 pos, int cr
 LOG("using uninitialized LibertyFont!\n");
 		return pos;
 	}
+
+	if (draw && font->glyph[glyph].points)
+		liberty_draw_pixels_offset(
+				font->glyph[glyph].points,
+				font->glyph[glyph].count,
+				(LibertyVec2){pos.x + font->glyph[glyph].bbx.x, pos.y + font->glyph[glyph].bbx.y});
+
+	pos.x += font->glyph[glyph].bbx.x + font->glyph[glyph].bbx.w;
+
 	switch (glyph)
 	{
 		case ' ':
 			pos.x += font->h>>1;
-			return pos;
+			break;
 		case '\t':
 			pos.x += font->h<<1;
-			return pos;
+			break;
 		case '\n':
 			pos.y += font->h;
 			pos.x = cret;
-			return pos;
+			break;
 		case '\r':
 			pos.x = cret;
-			return pos;
-		default:
-			if (!font->glyph[glyph].points) return pos;
-
-			if (draw)
-				liberty_draw_pixels_offset(
-						font->glyph[glyph].points,
-						font->glyph[glyph].count,
-						(LibertyVec2){pos.x + font->glyph[glyph].bbx.x, pos.y + font->glyph[glyph].bbx.y});
-
-			pos.x += font->glyph[glyph].bbx.x + font->glyph[glyph].bbx.w;
-			return pos;
+			break;
 	}
+
+	return pos;
 }
 
 LibertyVec2 liberty_draw_font_string(LibertyFont *font, LibertyVec2 pos, char *string)
@@ -263,6 +208,36 @@ LOG("using uninitialized LibertyFont!\n");
 		pos = draw_font_char(font, string[i], pos, cret, 1);
 
 	return pos;
+}
+
+void liberty_draw_font_animation(LibertyFont *font, LibertyVec2 pos, float rate)
+{
+	if (!font)
+	{
+LOG("using uninitialized LibertyFont!\n");
+		return;
+	}
+
+LOG("anim: %p, %f\n", font, font->frame);
+
+	short passed = -1;
+	for (uint8_t i = 0; i < 128; i++)
+	{
+		if (font->glyph[i].points)
+		{
+LOG("%d populated\n", i);
+			passed++;
+		}
+
+		if (passed == (int)font->frame)
+		{
+			draw_font_char(font, i, pos, 0, 1);
+			font->frame += rate;
+LOG("%d, %f\n", i, font->frame);
+			return;
+		}
+	}
+	font->frame = 0.0f;
 }
 
 LibertyVec4 liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char *string)

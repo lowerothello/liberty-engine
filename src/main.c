@@ -20,6 +20,7 @@ SDL_Window   *Window;
 SDL_Renderer *Renderer; /* TODO: remove */
 
 /* private source */
+#include "string.c"
 #include "events.c"
 
 #include "sdl/window.c"
@@ -30,6 +31,7 @@ SDL_Renderer *Renderer; /* TODO: remove */
 #include "config.c"
 #include "callback.c"
 #include "font.c"
+#include "dialogue.c"
 
 /* prototypes */
 static void cleanup(int signal);
@@ -43,6 +45,7 @@ static void cleanup(int signal)
 LOG("calling liberty_callback_cleanup\n");
 	liberty_callback_cleanup();
 	destroy_window();
+	free_dialogue_memoization();
 LOG("quitting SDL...\n");
 	SDL_Quit();
 LOG("SDL quit\n");

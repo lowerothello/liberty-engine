@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <SDL.h>
 
 /* public headers */
@@ -25,4 +26,5 @@
 #include "colour.h"   /* colours */
 #include "draw.h"     /* draw code */
 #include "font.h"
+#include "dialogue.h"
 #include "layer.h"
