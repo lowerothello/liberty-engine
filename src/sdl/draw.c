@@ -2,6 +2,17 @@ void liberty_set_colour(LibertyColour colour)
 {
 	SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, colour.a);
 }
+LibertyColour liberty_get_colour(void)
+{
+	LibertyColour colour;
+	SDL_GetRenderDrawColor(Renderer, &colour.r, &colour.g, &colour.b, &colour.a);
+	return colour;
+}
+
+void liberty_set_blend_mode(SDL_BlendMode blend)
+{
+	SDL_SetRenderDrawBlendMode(Renderer, blend);
+}
 
 void liberty_draw_clear(void)
 {

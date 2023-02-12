@@ -26,6 +26,9 @@ void liberty_free_font(LibertyFont *font);
 /* render a string using font .font */
 LibertyVec2 liberty_draw_font_string        (LibertyFont *font, LibertyVec2 pos, char *string);
 LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos, char *string);
+LibertyVec2 liberty_draw_font_string_reverse(LibertyFont *font, LibertyVec2 pos, char *string);
+
+LibertyVec2 liberty_draw_font_string_count(LibertyFont *font, LibertyVec2 pos, char *string, size_t count);
 
 void liberty_draw_font_animation(LibertyFont *font, LibertyVec2 pos, float rate);
 

@@ -21,10 +21,9 @@
 /* public headers */
 #include "maths.h"
 #include "config.h"
-#include "signal.h"   /* required by "callback.h" */
-#include "callback.h" /* engine callbacks */
-#include "colour.h"   /* colours */
-#include "draw.h"     /* draw code */
+#include "signal.h"
+#include "callback.h"
+#include "draw.h"
 #include "font.h"
 #include "dialogue.h"
 #include "layer.h"

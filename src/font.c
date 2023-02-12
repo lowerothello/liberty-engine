@@ -210,6 +210,16 @@ LOG("using uninitialized LibertyFont!\n");
 	return pos;
 }
 
+LibertyVec2 liberty_draw_font_string_count(LibertyFont *font, LibertyVec2 pos, char *string, size_t count)
+{
+	count = MIN(count, strlen(string)); /* don't try to write out of range */
+	char *trimmedstring = strdup(string);
+	trimmedstring[count+1] = '\0';
+	LibertyVec2 ret = liberty_draw_font_string(font, pos, trimmedstring);
+	free(trimmedstring);
+	return ret;
+}
+
 void liberty_draw_font_animation(LibertyFont *font, LibertyVec2 pos, float rate)
 {
 	if (!font)
@@ -268,6 +278,22 @@ LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos,
 	rect.h += 2;
 	liberty_draw_rect(0, rect);
 	return liberty_draw_font_string(font, pos, string);
+}
+LibertyVec2 liberty_draw_font_string_reverse(LibertyFont *font, LibertyVec2 pos, char *string)
+{
+	LibertyVec4 rect = liberty_get_font_string_bbx(font, pos, string);
+	rect.x -= 1;
+	rect.y -= 1;
+	rect.w += 3;
+	rect.h += 2;
+	liberty_draw_rect(1, rect);
+
+	LibertyColour oldcolour = liberty_get_colour();
+	liberty_set_colour((LibertyColour){0x00, 0x00, 0x00, 0x00});
+	LibertyVec2 ret = liberty_draw_font_string(font, pos, string);
+	liberty_set_colour(oldcolour);
+
+	return ret;
 }
 
 LibertyVec2 liberty_get_font_string_centre(LibertyFont *font, LibertyVec4 rect, char *string)

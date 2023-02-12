@@ -17,7 +17,10 @@ LibertyConfig liberty_default_config =
 
 LibertyFont     *font, *dialogueprompt;
 LibertyLayer    *uiLayer, *noiseLayer;
+
 LibertyDialogue *dialogue;
+float dialogue_visiblechars = 0.0f;
+#define DIALOGUE_TEXT_SPEED 20
 
 void liberty_callback_init(void)
 {
@@ -87,8 +90,8 @@ void player_input(SDL_Event event)
 			{
 				liberty_free_dialogue(dialogue);
 				dialogue = liberty_get_next_dialogue();
+				dialogue_visiblechars = 0.0f;
 			}
-			// TODO: not here, but dialogue box text should scan in character by character
 			break;
 	}
 }
@@ -155,9 +158,23 @@ void draw_dialogue(LibertyDialogue *d, double deltatime)
 	float x = ((WIDTH - DIALOGUE_WIDTH)>>1);
 	float y = (HEIGHT>>1) + (((HEIGHT>>1) - DIALOGUE_HEIGHT)>>1);
 	liberty_draw_rect(0, (LibertyVec4){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT});
-	liberty_draw_font_animation(dialogueprompt, (LibertyVec2){x + DIALOGUE_WIDTH - DIALOGUE_WIDTH_MARGIN, y + DIALOGUE_HEIGHT - DIALOGUE_HEIGHT_MARGIN}, 10*deltatime);
+
+	if (d->name)
+		liberty_draw_font_string_reverse(font, (LibertyVec2){x+1, y+1}, d->name);
+
 	if (d->text)
-		LIBERTY_DRAW_FONT_STRING_CENTRE(font, ((LibertyVec4){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT}), d->text);
+	{
+		if (dialogue_visiblechars < strlen(d->text))
+			dialogue_visiblechars += DIALOGUE_TEXT_SPEED*deltatime;
+		else
+			liberty_draw_font_animation(dialogueprompt,
+					(LibertyVec2){x + DIALOGUE_WIDTH - DIALOGUE_WIDTH_MARGIN, y + DIALOGUE_HEIGHT - DIALOGUE_HEIGHT_MARGIN},
+					10*deltatime);
+
+		liberty_draw_font_string_count(font,
+				liberty_get_font_string_centre(font, (LibertyVec4){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT}, d->text),
+				d->text, dialogue_visiblechars);
+	}
 }
 
 #define GRID_SIZE 0x28

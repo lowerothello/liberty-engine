@@ -1,16 +1,10 @@
-# comment
-tag start
-:
-	test 1
+close
 
-:
-	test 2
+me:
+	hey look at the text scan in
 
-goto start
-tag testtag
+you:
+	woa, that's so cool!
 
-:
-	test 3
-
-:
-	test 4
+me:
+	i know, right?
