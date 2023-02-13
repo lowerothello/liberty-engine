@@ -21,7 +21,6 @@
 /* public headers */
 #include "maths.h"
 #include "config.h"
-#include "signal.h"
 #include "callback.h"
 #include "draw.h"
 #include "font.h"

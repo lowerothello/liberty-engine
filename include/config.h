@@ -2,7 +2,8 @@
  * configuration options for the window.
  * config can be changed at any time with liberty_set_config.
  */
-typedef struct LibertyConfig {
+typedef struct LibertyConfig
+{
 	const char *title;
 	uint16_t    width;
 	uint16_t    height;

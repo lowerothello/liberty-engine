@@ -157,10 +157,10 @@ void draw_dialogue(LibertyDialogue *d, double deltatime)
 
 	float x = ((WIDTH - DIALOGUE_WIDTH)>>1);
 	float y = (HEIGHT>>1) + (((HEIGHT>>1) - DIALOGUE_HEIGHT)>>1);
-	liberty_draw_rect(0, (LibertyVec4){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT});
+	liberty_draw_rect(0, (LibertyRect){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT});
 
 	if (d->name)
-		liberty_draw_font_string_reverse(font, (LibertyVec2){x+1, y+1}, d->name);
+		LIBERTY_DRAW_FONT_STRING_REVERSE_CENTRE(font, ((LibertyRect){x, y+1, DIALOGUE_WIDTH, 0}), d->name);
 
 	if (d->text)
 	{
@@ -171,9 +171,7 @@ void draw_dialogue(LibertyDialogue *d, double deltatime)
 					(LibertyVec2){x + DIALOGUE_WIDTH - DIALOGUE_WIDTH_MARGIN, y + DIALOGUE_HEIGHT - DIALOGUE_HEIGHT_MARGIN},
 					10*deltatime);
 
-		liberty_draw_font_string_count(font,
-				liberty_get_font_string_centre(font, (LibertyVec4){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT}, d->text),
-				d->text, dialogue_visiblechars);
+		LIBERTY_DRAW_FONT_STRING_COUNT_CENTRE(font, ((LibertyRect){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT}), d->text, dialogue_visiblechars);
 	}
 }
 
@@ -193,26 +191,27 @@ void liberty_callback_draw(double deltatime)
 		}
 
 	liberty_set_colour((LibertyColour){0xff, 0x50, 0x50, 0xff});
-	liberty_draw_rect(0, (LibertyVec4){20, 20, 0x10, 0x10});
+	liberty_draw_rect(0, (LibertyRect){20, 20, 0x10, 0x10});
 
 	liberty_set_colour((LibertyColour){0x50, 0xff, 0x50, 0xff});
-	liberty_draw_rect(0, (LibertyVec4){30, 30, 0x10, 0x10});
+	liberty_draw_rect(0, (LibertyRect){30, 30, 0x10, 0x10});
 
 	liberty_set_colour((LibertyColour){0x50, 0x50, 0xff, 0xff});
-	liberty_draw_rect(0, (LibertyVec4){40, 40, 0x10, 0x10});
+	liberty_draw_rect(0, (LibertyRect){40, 40, 0x10, 0x10});
 
 	liberty_set_colour((LibertyColour){0xff, 0xff, 0xff, 0xff});
-	// LIBERTY_DRAW_FONT_STRING_CENTRE(font, ((LibertyVec4){0, (HEIGHT>>1), WIDTH, HEIGHT>>1}), "i'm lost on what to do");
-	// LIBERTY_DRAW_FONT_STRING_CENTRE(font, ((LibertyVec4){0, (HEIGHT>>1) + 5, WIDTH, HEIGHT>>1}), "there's nothing with meaning here");
+	// LIBERTY_DRAW_FONT_STRING_CENTRE(font, ((LibertyRect){0, (HEIGHT>>1), WIDTH, HEIGHT>>1}), "i'm lost on what to do");
+	// LIBERTY_DRAW_FONT_STRING_CENTRE(font, ((LibertyRect){0, (HEIGHT>>1) + 5, WIDTH, HEIGHT>>1}), "there's nothing with meaning here");
 	draw_dialogue(dialogue, deltatime);
 
-	liberty_draw_rect(0, (LibertyVec4){p.camera.x - p.pos.x, p.camera.y - p.pos.y, PLAYER_SIZE, PLAYER_SIZE});
+	liberty_draw_rect(0, (LibertyRect){p.camera.x - p.pos.x, p.camera.y - p.pos.y, PLAYER_SIZE, PLAYER_SIZE});
 
 	liberty_set_draw_layer(NULL);
 
 	int rng;
 	for (uint16_t i = 0; i < HEIGHT; i++)
 	{
+		/* TODO: bloom */
 		rng = rand()%3;
 		liberty_draw_layer_row(uiLayer, i, (LibertyVec2){rng +1, -1}, (LibertyColour){0xff, 0x00, 0x00, 0xff});
 		liberty_draw_layer_row(uiLayer, i, (LibertyVec2){rng -1, +0}, (LibertyColour){0x00, 0xff, 0x00, 0xff});

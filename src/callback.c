@@ -18,7 +18,7 @@ void liberty_callback_cleanup(void) { }
 LibertySignal liberty_callback_update(double deltatime)
 { return LIBERTY_SIGNAL_OK; }
 
-void liberty_callback_draw(double frametime) { }
+void liberty_callback_draw(double deltatime) { }
 
 /* more sophisticated stub handler as an example */
 LibertySignal liberty_callback_event(SDL_Event event)

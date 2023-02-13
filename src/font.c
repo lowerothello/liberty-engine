@@ -168,7 +168,7 @@ LOG("using uninitialized LibertyFont!\n");
 	}
 
 	if (draw && font->glyph[glyph].points)
-		liberty_draw_pixels_offset(
+		liberty_draw_pixels(
 				font->glyph[glyph].points,
 				font->glyph[glyph].count,
 				(LibertyVec2){pos.x + font->glyph[glyph].bbx.x, pos.y + font->glyph[glyph].bbx.y});
@@ -250,9 +250,9 @@ LOG("%d, %f\n", i, font->frame);
 	font->frame = 0.0f;
 }
 
-LibertyVec4 liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char *string)
+LibertyRect liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char *string)
 {
-	LibertyVec4 ret;
+	LibertyRect ret;
 	ret.x = pos.x;
 	ret.y = pos.y;
 	ret.w = ret.h = 0.0f;
@@ -271,7 +271,7 @@ LibertyVec4 liberty_get_font_string_bbx(LibertyFont *font, LibertyVec2 pos, char
 
 LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos, char *string)
 {
-	LibertyVec4 rect = liberty_get_font_string_bbx(font, pos, string);
+	LibertyRect rect = liberty_get_font_string_bbx(font, pos, string);
 	rect.x -= 1;
 	rect.y -= 1;
 	rect.w += 3;
@@ -281,7 +281,7 @@ LibertyVec2 liberty_draw_font_string_outline(LibertyFont *font, LibertyVec2 pos,
 }
 LibertyVec2 liberty_draw_font_string_reverse(LibertyFont *font, LibertyVec2 pos, char *string)
 {
-	LibertyVec4 rect = liberty_get_font_string_bbx(font, pos, string);
+	LibertyRect rect = liberty_get_font_string_bbx(font, pos, string);
 	rect.x -= 1;
 	rect.y -= 1;
 	rect.w += 3;
@@ -296,8 +296,8 @@ LibertyVec2 liberty_draw_font_string_reverse(LibertyFont *font, LibertyVec2 pos,
 	return ret;
 }
 
-LibertyVec2 liberty_get_font_string_centre(LibertyFont *font, LibertyVec4 rect, char *string)
+LibertyVec2 liberty_get_font_string_centre(LibertyFont *font, LibertyRect rect, char *string)
 {
-	LibertyVec4 bbx = liberty_get_font_string_bbx(font, (LibertyVec2){0, 0}, string);
+	LibertyRect bbx = liberty_get_font_string_bbx(font, (LibertyVec2){0, 0}, string);
 	return (LibertyVec2){rect.x + ((rect.w - bbx.w)*0.5f), rect.y + ((rect.h - bbx.h)*0.5f)};
 }

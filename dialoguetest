@@ -1,3 +1,4 @@
+tag start
 close
 
 me:
@@ -8,3 +9,5 @@ you:
 
 me:
 	i know, right?
+
+goto start
