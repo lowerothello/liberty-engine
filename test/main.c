@@ -34,7 +34,8 @@ void updateTestEntity(LibertyEntity *entity, float deltatime)
 }
 void drawTestEntity(LibertyEntity *entity, LibertyVec2 camera)
 {
-	liberty_set_colour(liberty_hsv_to_rgb((LibertyHSV){((TestEntityState*)entity->data)->hue*0xff, 0x80, 0xff}));
+	LibertyRGB entitydrawcolour = liberty_hsv_to_rgb((LibertyHSV){((TestEntityState*)entity->data)->hue*0xff, 0x80, 0xff, 0x80});
+	liberty_set_colour(entitydrawcolour);
 	liberty_draw_rect(1,
 			(LibertyRect){
 				entity->collision.x - camera.x,
@@ -42,6 +43,16 @@ void drawTestEntity(LibertyEntity *entity, LibertyVec2 camera)
 				entity->collision.w,
 				entity->collision.h
 			});
+	char buffer[8];
+	snprintf(buffer, 10, "#%02x%02x%02x", entitydrawcolour.r, entitydrawcolour.g, entitydrawcolour.b);
+	LIBERTY_DRAW_FONT_STRING_REVERSE_CENTRE(font,
+			((LibertyRect){
+				entity->collision.x - camera.x,
+				entity->collision.y - camera.y + entity->collision.w + 2,
+				entity->collision.w,
+				entity->collision.h
+			}),
+			buffer);
 }
 
 

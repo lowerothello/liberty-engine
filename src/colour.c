@@ -2,6 +2,7 @@
 LibertyHSV liberty_rgb_to_hsv(LibertyRGB in)
 {
 	LibertyHSV out;
+	out.a = in.a;
 
 	uint8_t min = MIN(MIN(in.r, in.g), in.b);
 	uint8_t max = MAX(MAX(in.r, in.g), in.b);
@@ -37,6 +38,7 @@ LibertyHSV liberty_rgb_to_hsv(LibertyRGB in)
 LibertyRGB liberty_hsv_to_rgb(LibertyHSV in)
 {
 	LibertyRGB out;
+	out.a = in.a;
 
 	if (!in.s)
 	{
