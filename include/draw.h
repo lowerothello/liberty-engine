@@ -1,16 +1,8 @@
 /* all drawing operations use the active colour and draw to the active layer */
 
-typedef struct LibertyColour
-{
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-	uint8_t a;
-} LibertyColour;
-
 /* set/get the active colour */
-void liberty_set_colour(LibertyColour colour);
-LibertyColour liberty_get_colour(void);
+void liberty_set_colour(LibertyRGB colour);
+LibertyRGB liberty_get_colour(void);
 
 /* fill */
 void liberty_draw_clear(void);

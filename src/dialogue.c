@@ -37,7 +37,7 @@ typedef struct DialogueFiles
 } DialogueFiles;
 DialogueFiles *df; /* pretty sure this is fine to be a global */
 
-static void free_dialogue_memoization(void)
+static void free_dialogue_state(void)
 {
 	if (!df) return;
 	for (size_t i = 0; i < df->count; i++)

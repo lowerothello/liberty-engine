@@ -3,9 +3,9 @@
 /* a single font glyph */
 typedef struct LibertyGlyph
 {
-	LibertyIntRect  bbx;    /* glyph bounding box */
-	int             count;  /* number of pixels that make up the glyph */
-	LibertyVec2    *points; /* pixels that make up the glyph */
+	LibertyRect  bbx;    /* glyph bounding box */
+	int          count;  /* number of pixels that make up the glyph */
+	LibertyVec2 *points; /* pixels that make up the glyph */
 } LibertyGlyph;
 
 /* an entire font worth of glyphs */

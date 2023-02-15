@@ -5,7 +5,7 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 /* returns x, ensured to be above y and below z */
-#define CLAMP(x, y, z) ((x) < (y) ? ((x) > (z) ? (x) : (z)) : (y))
+#define CLAMP(x, y, z) ((x) > (y) ? ((x) < (z) ? (x) : (z)) : (y))
 
 /* returns a point (float)z along the line between x and y */
 #define LERP(x, y, z) ((x) + ((y) - (x)) * (z))
@@ -29,7 +29,7 @@ typedef struct LibertyVec3
 	float z;
 } LibertyVec3;
 
-/* float 2d rectangle */
+/* 2d rectangle */
 typedef struct LibertyRect
 {
 	float x;
@@ -37,12 +37,3 @@ typedef struct LibertyRect
 	float w;
 	float h;
 } LibertyRect;
-
-/* int 2d rectangle */
-typedef struct LibertyIntRect
-{
-	int x;
-	int y;
-	int w;
-	int h;
-} LibertyIntRect;

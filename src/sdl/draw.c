@@ -1,10 +1,10 @@
-void liberty_set_colour(LibertyColour colour)
+void liberty_set_colour(LibertyRGB colour)
 {
 	SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, colour.a);
 }
-LibertyColour liberty_get_colour(void)
+LibertyRGB liberty_get_colour(void)
 {
-	LibertyColour colour;
+	LibertyRGB colour;
 	SDL_GetRenderDrawColor(Renderer, &colour.r, &colour.g, &colour.b, &colour.a);
 	return colour;
 }
@@ -18,7 +18,7 @@ static void show_frame(void)
 {
 	liberty_set_draw_layer(NULL);
 	SDL_RenderPresent(Renderer);
-	liberty_set_colour((LibertyColour){0x00, 0x00, 0x00, 0xff});
+	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
 	liberty_draw_clear();
 }
 

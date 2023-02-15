@@ -1,13 +1,8 @@
 tag start
 close
 
-me:
-	hey look at the text scan in
-
-you:
-	woa, that's so cool!
-
-me:
-	i know, right?
+:
+	i'm lost on what to do
+	there's nothing with meaning here
 
 goto start
