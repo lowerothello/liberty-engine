@@ -37,15 +37,15 @@ LOG("BDF: STARTCHAR\n");
 LOG("BDF: ENCODING '%c'\n", index);
 		} else if (!strcmp(keyword, "BBX"))
 		{
-			ret = read_bdf_number(&i, fp, " \n" ); font->glyph[index].bbx.w = i;
-			ret = read_bdf_number(&i, fp, " \n" ); font->glyph[index].bbx.h = i;
-			ret = read_bdf_number(&i, fp, " \n" ); font->glyph[index].bbx.x = i;
-			ret = read_bdf_number(&i, fp, " \n" ); font->glyph[index].bbx.y = i;
+			ret = read_bdf_number(&font->glyph[index].bbx.w, fp, " \n" );
+			ret = read_bdf_number(&font->glyph[index].bbx.h, fp, " \n" );
+			ret = read_bdf_number(&font->glyph[index].bbx.x, fp, " \n" );
+			ret = read_bdf_number(&font->glyph[index].bbx.y, fp, " \n" );
 			if (ret != '\n') read_file_until_ifs(NULL, fp, "\n");
 			font->glyph[index].bbx.y = font->h - (font->glyph[index].bbx.y + font->glyph[index].bbx.h);
 LOG("BDF: BBX: w=%d h=%d x=%d y=%d\n",
-	(int)font->glyph[index].bbx.w, (int)font->glyph[index].bbx.h,
-	(int)font->glyph[index].bbx.x, (int)font->glyph[index].bbx.y);
+	font->glyph[index].bbx.w, font->glyph[index].bbx.h,
+	font->glyph[index].bbx.x, font->glyph[index].bbx.y);
 		} else if (!strcmp(keyword, "BITMAP"))
 		{
 LOG("BDF: BITMAP\n");

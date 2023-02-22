@@ -17,8 +17,9 @@ LibertyConfig liberty_default_config =
 
 LibertyFont     *font, *dialogueprompt;
 LibertyLayer    *uiLayer, *noiseLayer;
-
+LibertyTexture  *texture;
 LibertyDialogue *dialogue;
+
 float dialogue_visiblechars = 0.0f;
 #define DIALOGUE_TEXT_SPEED 30
 
@@ -58,8 +59,8 @@ void drawTestEntity(LibertyEntity *entity, LibertyVec2 camera)
 
 void liberty_callback_init(void)
 {
-	font = liberty_new_font_from_file("Untitled1-6.bdf");
-	dialogueprompt = liberty_new_font_from_file("dialogueprompt-8.bdf");
+	font = liberty_new_font_from_file("test/Untitled1-6.bdf");
+	dialogueprompt = liberty_new_font_from_file("test/dialogueprompt-8.bdf");
 	uiLayer = liberty_new_layer((LibertyVec2){WIDTH, HEIGHT});
 	noiseLayer = liberty_new_layer((LibertyVec2){NOISE_TEX_SIZE, NOISE_TEX_SIZE});
 	liberty_set_draw_layer(noiseLayer);
@@ -82,6 +83,8 @@ void liberty_callback_init(void)
 	entitystate.hue = 0.0f;
 	liberty_add_entity(1, (LibertyRect){20, 20, 8, 8}, &entitystate, sizeof(TestEntityState),
 			updateTestEntity, drawTestEntity);
+
+	texture = liberty_new_texture_from_file("test/circle-32px.png");
 }
 
 void liberty_callback_cleanup(void)
@@ -91,6 +94,7 @@ void liberty_callback_cleanup(void)
 	liberty_free_layer(uiLayer);
 	liberty_free_layer(noiseLayer);
 	liberty_free_dialogue(dialogue);
+	liberty_free_texture(texture);
 }
 
 
@@ -151,8 +155,11 @@ void handleAccel(double deltatime,
 		LibertyVec2 *accel, LibertyVec2 joystick,
 		float coef_speed, float coef_friction, float coef_max)
 {
-	if (fabsf(accel->x) < coef_max) accel->x += joystick.x * coef_speed*deltatime;
-	if (fabsf(accel->y) < coef_max) accel->y += joystick.y * coef_speed*deltatime;
+	if (powf(fabsf(accel->x), 2.0f) + powf(fabsf(accel->y), 2.0f) < powf(coef_max, 2.0f))
+	{
+		accel->x += joystick.x * coef_speed*deltatime;
+		accel->y += joystick.y * coef_speed*deltatime;
+	}
 
 	accel->x = LERP(accel->x, 0, coef_friction*deltatime);
 	accel->y = LERP(accel->y, 0, coef_friction*deltatime);
@@ -162,13 +169,12 @@ void handleAccel(double deltatime,
 
 LibertySignal liberty_callback_update(double deltatime)
 {
-
 	handleAccel(deltatime, &p.accel,
 			(LibertyVec2){p.input.right - p.input.left, p.input.down - p.input.up},
 			WALK_ACCEL, WALK_FRICTION, WALK_TERMINAL);
 
-	p.pos.x += p.accel.x*deltatime;
-	p.pos.y += p.accel.y*deltatime;
+	p.pos.x += (p.accel.x)*deltatime;
+	p.pos.y += (p.accel.y)*deltatime;
 
 	LibertyVec2 cameratarget;
 	cameratarget.x = p.pos.x - ((WIDTH - PLAYER_SIZE)>>1);
@@ -211,6 +217,7 @@ void draw_dialogue(LibertyDialogue *d, double deltatime)
 	}
 }
 
+float rotate;
 #define GRID_SIZE 0x28
 void liberty_callback_draw(double deltatime)
 {
@@ -240,6 +247,16 @@ void liberty_callback_draw(double deltatime)
 	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
 
 	liberty_draw_rect(0, (LibertyRect){p.pos.x - p.camera.x, p.pos.y - p.camera.y, PLAYER_SIZE, PLAYER_SIZE});
+	LibertyVec2 playercentre = {p.pos.x - p.camera.x + (PLAYER_SIZE>>1), p.pos.y - p.camera.y + (PLAYER_SIZE>>1)};
+	liberty_draw_line(playercentre, (LibertyVec2){playercentre.x + (p.accel.x*0.5f), playercentre.y + (p.accel.y*0.5f)});
+
+
+	rotate = fmodf(rotate + deltatime * 360.0f, 360.0f);
+	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
+	liberty_draw_texture(texture, (LibertyVec2){100, 10}, rotate, 0, 0);
+	liberty_draw_texture(texture, (LibertyVec2){140, 10}, 0.0f, 0, 0);
+	liberty_draw_texture(texture, (LibertyVec2){180, 10}, -rotate, 0, 0);
+
 
 	draw_dialogue(dialogue, deltatime);
 	char buffer[32];
@@ -264,15 +281,15 @@ void liberty_callback_draw(double deltatime)
 		rng = rand()%6;
 
 		/* shadow */
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +1, -2 + -1}, (LibertyRGB){0xff, 0x00, 0x00, 0x30});
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng -1, -2 + +0}, (LibertyRGB){0x00, 0xff, 0x00, 0x30});
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +2, -2 + +1}, (LibertyRGB){0x00, 0x00, 0xff, 0x30});
+		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +1, -2 + -1});
+		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng -1, -2 + +0});
+		liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +2, -2 + +1});
 
 		/* TODO: bloom */
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +1, -1}, (LibertyRGB){0xff, 0x00, 0x00, 0xff});
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng -1, +0}, (LibertyRGB){0x00, 0xff, 0x00, 0xff});
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +2, +1}, (LibertyRGB){0x00, 0x00, 0xff, 0xff});
-		liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){0,       0}, (LibertyRGB){0xff, 0xff, 0xff, 0xff});
+		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +1, -1});
+		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng -1, +0});
+		liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +2, +1});
+		liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){0,       0});
 	}
 
 	// liberty_draw_layer(noiseLayer, SDL_BLENDMODE_ADD, (LibertyVec2){rand()%(NOISE_TEX_SIZE - WIDTH), rand()%(NOISE_TEX_SIZE - HEIGHT)}, (LibertyRGB){0x50, 0x40, 0xff, 0x20});

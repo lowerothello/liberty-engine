@@ -37,3 +37,10 @@ typedef struct LibertyRect
 	float w;
 	float h;
 } LibertyRect;
+typedef struct LibertyIntRect
+{
+	int x;
+	int y;
+	int w;
+	int h;
+} LibertyIntRect;

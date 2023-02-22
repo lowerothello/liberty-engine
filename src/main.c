@@ -1,6 +1,9 @@
 #include <signal.h>
 #include <time.h>
 
+/* png library */
+#include "../lib/lodepng/lodepng.h"
+
 /* public headers */
 #include "../include/liberty.h"
 
@@ -11,7 +14,6 @@
 #define LOG(...) do { } while(0);
 #endif
 
-// #define SDL_ERR() fprintf(stderr, "ERROR: %s\n", SDL_GetError());
 #define ERR(s1) fprintf(stderr, "ERROR: %s\n", s1);
 
 /* private globals */
@@ -28,6 +30,7 @@ SDL_Renderer *Renderer; /* TODO: remove */
 #include "sdl/window.c"
 #include "sdl/draw.c"
 #include "sdl/layer.c"
+#include "sdl/texture.c"
 
 /* public source */
 #include "config.c"
