@@ -31,11 +31,15 @@ typedef struct DialogueFile
 
 typedef struct DialogueFiles
 { /* alloc(sizeof(DialogueFiles) + sizeof(DialogueFile)*count) */
+	struct { /* custom functions */
+		size_t count;
+		int (**callback)(const char *line); /* returns 1 to continue to the next line and 2 to break */
+	} custom;
 	size_t       count;
 	FILE        *activefp;
 	DialogueFile file[];
 } DialogueFiles;
-DialogueFiles *df; /* pretty sure this is fine to be a global */
+DialogueFiles *df;
 
 static void free_dialogue_state(void)
 {
@@ -97,6 +101,18 @@ LibertyDialogue *liberty_get_next_dialogue(void)
 
 			break;
 		}
+
+		/* handle custom functions */
+		for (size_t i = 0; i < df->custom.count; i++)
+			switch (df->custom.callback[i](buffer))
+			{
+				case 1:
+					goto liberty_get_next_dialogue_next_line;
+				case 2:
+					free(buffer);
+					free(d);
+					return NULL;
+			}
 
 		/* discard comments */
 		if (buffer[0] == '#')
@@ -162,6 +178,7 @@ LibertyDialogue *liberty_get_next_dialogue(void)
 
 
 		/* fallback case */
+liberty_get_next_dialogue_next_line:
 		free(buffer);
 	}
 	return d;
@@ -190,4 +207,18 @@ liberty_read_dialogue_file_readfile:
 	rewind(df->activefp);
 
 	goto_dialogue_tag(tag);
+}
+
+/* callback returns 1 to continue to the next line and 2 to break */
+void liberty_add_custom_dialogue_function(int (*callback)(const char *line))
+{
+	df->custom.count++;
+	df->custom.callback = realloc(df->custom.callback, sizeof(void*) * df->custom.count);
+	df->custom.callback[df->custom.count - 1] = callback;
+}
+void liberty_clear_custom_dialogue_functions(void)
+{
+	df->custom.count = 0;
+	free(df->custom.callback);
+	df->custom.callback = NULL;
 }

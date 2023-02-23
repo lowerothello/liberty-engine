@@ -248,7 +248,7 @@ void liberty_callback_draw(double deltatime)
 
 	liberty_draw_rect(0, (LibertyRect){p.pos.x - p.camera.x, p.pos.y - p.camera.y, PLAYER_SIZE, PLAYER_SIZE});
 	LibertyVec2 playercentre = {p.pos.x - p.camera.x + (PLAYER_SIZE>>1), p.pos.y - p.camera.y + (PLAYER_SIZE>>1)};
-	liberty_draw_line(playercentre, (LibertyVec2){playercentre.x + (p.accel.x*0.5f), playercentre.y + (p.accel.y*0.5f)});
+	liberty_draw_pixel((LibertyVec2){playercentre.x + (p.accel.x*0.3f), playercentre.y + (p.accel.y*0.3f)});
 
 
 	rotate = fmodf(rotate + deltatime * 360.0f, 360.0f);
@@ -275,22 +275,41 @@ void liberty_callback_draw(double deltatime)
 
 	liberty_set_draw_layer(NULL);
 
+	/* bloom */
+#define BLOOMOPACITY 3 /* (uint8_t) */
+#define BLOOMRADIUS 5 /* (int) */
+	float bloomalpha;
+	float bloomfalloff = 1.0f / (BLOOMRADIUS * BLOOMRADIUS);
+	for (int x = -BLOOMRADIUS; x <= BLOOMRADIUS; x++)
+		for (int y = -BLOOMRADIUS; y <= BLOOMRADIUS; y++)
+		{
+			bloomalpha=1.0f - fabsf(x)*bloomfalloff - fabsf(y)*bloomfalloff;
+			bloomalpha=CLAMP(bloomalpha, 0.0f, 1.0f) * 255.0f;
+			liberty_set_colour((LibertyRGB){bloomalpha, bloomalpha, bloomalpha, BLOOMOPACITY});
+			liberty_draw_layer(uiLayer, SDL_BLENDMODE_ADD, (LibertyVec2){x, y});
+		}
+
+
 	int rng;
 	for (uint16_t i = 0; i < HEIGHT; i++)
 	{
 		rng = rand()%6;
+
 
 		/* shadow */
 		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +1, -2 + -1});
 		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng -1, -2 + +0});
 		liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +2, -2 + +1});
 
-		/* TODO: bloom */
 		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +1, -1});
 		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng -1, +0});
 		liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +2, +1});
-		liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){0,       0});
+
+		liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){0, 0});
 	}
 
 	// liberty_draw_layer(noiseLayer, SDL_BLENDMODE_ADD, (LibertyVec2){rand()%(NOISE_TEX_SIZE - WIDTH), rand()%(NOISE_TEX_SIZE - HEIGHT)}, (LibertyRGB){0x50, 0x40, 0xff, 0x20});
+	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
+	snprintf(buffer, 32, "%d", (int)(1.0 / deltatime));
+	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 1}, buffer);
 }
