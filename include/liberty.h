@@ -31,3 +31,4 @@
 #include "entity.h"
 #include "layer.h"
 #include "texture.h"
+#include "grid.h"

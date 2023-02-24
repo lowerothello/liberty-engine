@@ -38,6 +38,7 @@ SDL_Renderer *Renderer; /* TODO: remove */
 #include "font.c"
 #include "dialogue.c"
 #include "entity.c"
+#include "grid.c"
 
 /* prototypes */
 static void cleanup(int signal);

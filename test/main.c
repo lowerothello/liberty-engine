@@ -2,7 +2,26 @@
 
 #define WIDTH 320
 #define HEIGHT 180
+
 #define NOISE_TEX_SIZE 1024
+#define GRID_SIZE 0x28
+#define PLAYER_SIZE 0x10
+
+#define WALK_ACCEL 2000.f
+#define WALK_FRICTION 20.f
+#define WALK_TERMINAL 100.f
+#define CAMERA_SPEED 20
+
+#define DIALOGUE_TEXT_SPEED 30
+#define DIALOGUE_WIDTH 200
+#define DIALOGUE_HEIGHT 50
+#define DIALOGUE_WIDTH_MARGIN 11
+#define DIALOGUE_HEIGHT_MARGIN 13
+
+#define BLOOMOPACITY 0x03 /* (uint8_t) */
+#define SHADOWOPACITY 0x38 /* (uint8_t) */
+#define BLOOMRADIUS 5 /* (int) */
+
 
 LibertyConfig liberty_default_config =
 {
@@ -19,9 +38,9 @@ LibertyFont     *font, *dialogueprompt;
 LibertyLayer    *uiLayer, *noiseLayer;
 LibertyTexture  *texture;
 LibertyDialogue *dialogue;
+LibertyGridMap  *map;
 
 float dialogue_visiblechars = 0.0f;
-#define DIALOGUE_TEXT_SPEED 30
 
 typedef struct TestEnitityState
 {
@@ -85,6 +104,7 @@ void liberty_callback_init(void)
 			updateTestEntity, drawTestEntity);
 
 	texture = liberty_new_texture_from_file("test/circle-32px.png");
+	map = liberty_new_grid_map_from_file("test/gridmap");
 }
 
 void liberty_callback_cleanup(void)
@@ -95,10 +115,10 @@ void liberty_callback_cleanup(void)
 	liberty_free_layer(noiseLayer);
 	liberty_free_dialogue(dialogue);
 	liberty_free_texture(texture);
+	liberty_free_grid_map(map);
 }
 
 
-#define PLAYER_SIZE 0x10
 typedef struct Player
 {
 	LibertyVec2 pos;
@@ -113,10 +133,6 @@ typedef struct Player
 	} input;
 } Player;
 Player p;
-
-#define WALK_ACCEL 2000.f
-#define WALK_FRICTION 20.f
-#define WALK_TERMINAL 100.f
 
 void playerInput(SDL_Event event)
 {
@@ -151,6 +167,38 @@ LibertySignal liberty_callback_event(SDL_Event event)
 	return LIBERTY_SIGNAL_OK;
 }
 
+void draw_map_id(LibertyGridMap *map, LibertyVec2 offset, uint32_t id)
+{
+	LibertyVec2 *points;
+	size_t count = liberty_get_grid_map_all_of_id(map, &points, id);
+	// liberty_draw_pixels(points, count, offset);
+	for (size_t i = 0; i < count; i++)
+		liberty_draw_rect(1, (LibertyRect){
+				points[i].x*GRID_SIZE + offset.x,
+				points[i].y*GRID_SIZE + offset.y,
+				GRID_SIZE, GRID_SIZE});
+
+	free(points);
+}
+
+/* returns true if pos collides with the map layer */
+bool collide_map_id(LibertyGridMap *map, LibertyRect pos, uint32_t id)
+{
+	LibertyVec2 *points;
+	size_t count = liberty_get_grid_map_all_of_id(map, &points, id);
+	// liberty_draw_pixels(points, count, offset);
+	for (size_t i = 0; i < count; i++)
+		if (pos.x+pos.w > points[i].x*GRID_SIZE && pos.x < (points[i].x + 1)*GRID_SIZE
+		 && pos.y+pos.w > points[i].y*GRID_SIZE && pos.y < (points[i].y + 1)*GRID_SIZE)
+		{
+			free(points);
+			return 1;
+		}
+
+	free(points);
+	return 0;
+}
+
 void handleAccel(double deltatime,
 		LibertyVec2 *accel, LibertyVec2 joystick,
 		float coef_speed, float coef_friction, float coef_max)
@@ -165,16 +213,20 @@ void handleAccel(double deltatime,
 	accel->y = LERP(accel->y, 0, coef_friction*deltatime);
 }
 
-#define CAMERA_SPEED 20
-
 LibertySignal liberty_callback_update(double deltatime)
 {
 	handleAccel(deltatime, &p.accel,
 			(LibertyVec2){p.input.right - p.input.left, p.input.down - p.input.up},
 			WALK_ACCEL, WALK_FRICTION, WALK_TERMINAL);
 
-	p.pos.x += (p.accel.x)*deltatime;
-	p.pos.y += (p.accel.y)*deltatime;
+	if (collide_map_id(map, (LibertyRect){p.pos.x + p.accel.x*deltatime, p.pos.y, PLAYER_SIZE, PLAYER_SIZE}, 1))
+		p.accel.x = 0.0f;
+
+	if (collide_map_id(map, (LibertyRect){p.pos.x, p.pos.y + p.accel.y*deltatime, PLAYER_SIZE, PLAYER_SIZE}, 1))
+		p.accel.y = 0.0f;
+
+	p.pos.x += p.accel.x*deltatime;
+	p.pos.y += p.accel.y*deltatime;
 
 	LibertyVec2 cameratarget;
 	cameratarget.x = p.pos.x - ((WIDTH - PLAYER_SIZE)>>1);
@@ -189,10 +241,6 @@ LibertySignal liberty_callback_update(double deltatime)
 	return LIBERTY_SIGNAL_OK;
 }
 
-#define DIALOGUE_WIDTH 200
-#define DIALOGUE_HEIGHT 50
-#define DIALOGUE_WIDTH_MARGIN 11
-#define DIALOGUE_HEIGHT_MARGIN 13
 void draw_dialogue(LibertyDialogue *d, double deltatime)
 {
 	if (!d) return;
@@ -218,31 +266,24 @@ void draw_dialogue(LibertyDialogue *d, double deltatime)
 }
 
 float rotate;
-#define GRID_SIZE 0x28
 void liberty_callback_draw(double deltatime)
 {
 	liberty_set_draw_layer(uiLayer);
 	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
 	liberty_draw_clear();
 
-	liberty_set_colour((LibertyRGB){0x20, 0x20, 0x20, 0xff});
+	// liberty_draw_entities(p.camera);
+
+	liberty_set_colour((LibertyRGB){0xff, 0xff, 0x00, 0xff});
+	draw_map_id(map, (LibertyVec2){-p.camera.x, -p.camera.y}, 1);
+
+	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
 	for (uint8_t x = 0; x <= WIDTH/GRID_SIZE; x++)
 		for (uint8_t y = 0; y <= HEIGHT/GRID_SIZE; y++)
 		{
 			liberty_draw_line((LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE - 1, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE}, (LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE + 1, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE});
 			liberty_draw_line((LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE - 1}, (LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE + 1});
 		}
-
-	liberty_set_colour((LibertyRGB){0xff, 0x50, 0x50, 0xff});
-	liberty_draw_rect(0, (LibertyRect){20, 20, 0x10, 0x10});
-
-	liberty_set_colour((LibertyRGB){0x50, 0xff, 0x50, 0xff});
-	liberty_draw_rect(0, (LibertyRect){30, 30, 0x10, 0x10});
-
-	liberty_set_colour((LibertyRGB){0x50, 0x50, 0xff, 0xff});
-	liberty_draw_rect(0, (LibertyRect){40, 40, 0x10, 0x10});
-
-	liberty_draw_entities(p.camera);
 
 	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
 
@@ -251,11 +292,11 @@ void liberty_callback_draw(double deltatime)
 	liberty_draw_pixel((LibertyVec2){playercentre.x + (p.accel.x*0.3f), playercentre.y + (p.accel.y*0.3f)});
 
 
-	rotate = fmodf(rotate + deltatime * 360.0f, 360.0f);
-	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
-	liberty_draw_texture(texture, (LibertyVec2){100, 10}, rotate, 0, 0);
-	liberty_draw_texture(texture, (LibertyVec2){140, 10}, 0.0f, 0, 0);
-	liberty_draw_texture(texture, (LibertyVec2){180, 10}, -rotate, 0, 0);
+	// rotate = fmodf(rotate + deltatime * 360.0f, 360.0f);
+	// liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
+	// liberty_draw_texture(texture, (LibertyVec2){100, 10}, rotate, 0, 0);
+	// liberty_draw_texture(texture, (LibertyVec2){140, 10}, 0.0f, 0, 0);
+	// liberty_draw_texture(texture, (LibertyVec2){180, 10}, -rotate, 0, 0);
 
 
 	draw_dialogue(dialogue, deltatime);
@@ -276,8 +317,6 @@ void liberty_callback_draw(double deltatime)
 	liberty_set_draw_layer(NULL);
 
 	/* bloom */
-#define BLOOMOPACITY 3 /* (uint8_t) */
-#define BLOOMRADIUS 5 /* (int) */
 	float bloomalpha;
 	float bloomfalloff = 1.0f / (BLOOMRADIUS * BLOOMRADIUS);
 	for (int x = -BLOOMRADIUS; x <= BLOOMRADIUS; x++)
@@ -297,9 +336,9 @@ void liberty_callback_draw(double deltatime)
 
 
 		/* shadow */
-		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +1, -2 + -1});
-		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng -1, -2 + +0});
-		liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, 0x30}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +2, -2 + +1});
+		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, SHADOWOPACITY}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +1, -2 + -1});
+		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, SHADOWOPACITY}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng -1, -2 + +0});
+		liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, SHADOWOPACITY}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){6 + rng +2, -2 + +1});
 
 		liberty_set_colour((LibertyRGB){0xff, 0x00, 0x00, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng +1, -1});
 		liberty_set_colour((LibertyRGB){0x00, 0xff, 0x00, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng -1, +0});
@@ -307,9 +346,4 @@ void liberty_callback_draw(double deltatime)
 
 		liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff}); liberty_draw_layer_row(uiLayer, i, SDL_BLENDMODE_ADD, (LibertyVec2){0, 0});
 	}
-
-	// liberty_draw_layer(noiseLayer, SDL_BLENDMODE_ADD, (LibertyVec2){rand()%(NOISE_TEX_SIZE - WIDTH), rand()%(NOISE_TEX_SIZE - HEIGHT)}, (LibertyRGB){0x50, 0x40, 0xff, 0x20});
-	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
-	snprintf(buffer, 32, "%d", (int)(1.0 / deltatime));
-	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 1}, buffer);
 }
