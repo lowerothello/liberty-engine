@@ -24,7 +24,8 @@ static unsigned short get_empty_entity(void)
 	return edb.c - 1;
 }
 
-void liberty_add_entity(uint8_t type, LibertyRect collision,
+/* .data is the starting state, it can be omitted */
+LibertyEntity *liberty_add_entity(uint8_t type, LibertyRect collision,
 		void *data, size_t datasize,
 		void (*update)(struct LibertyEntity *, float deltatime),
 		void   (*draw)(struct LibertyEntity *, LibertyVec2 camera))
@@ -33,9 +34,15 @@ void liberty_add_entity(uint8_t type, LibertyRect collision,
 	edb.v[index].type = type;
 	edb.v[index].collision = collision;
 	edb.v[index].data = malloc(datasize);
-	memcpy(edb.v[index].data, data, datasize);
+
+	/* initialize data if a starting state has been passed */
+	if (data)
+		memcpy(edb.v[index].data, data, datasize);
+
 	edb.v[index].draw = draw;
 	edb.v[index].update = update;
+
+	return &edb.v[index];
 }
 
 void liberty_free_entity(LibertyEntity *entity)

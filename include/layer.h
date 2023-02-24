@@ -24,4 +24,13 @@ void liberty_draw_layer_row(
 		LibertyLayer *layer,
 		uint16_t row,
 		SDL_BlendMode blend, /* TODO: shouldn't be an sdl enum */
-		LibertyVec2 offset);
+		LibertyVec2 offset, float scale);
+
+/* blit a single column of a layer to the active layer */
+/* .column is the column to draw, the destination y position takes into account the row */
+/* .offset is the position the top left corner of the layer would be */
+void liberty_draw_layer_column(
+		LibertyLayer *layer,
+		uint16_t column,
+		SDL_BlendMode blend, /* TODO: shouldn't be an sdl enum */
+		LibertyVec2 offset, float scale);

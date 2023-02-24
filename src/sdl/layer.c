@@ -32,13 +32,28 @@ void liberty_draw_layer(LibertyLayer *layer,
 
 void liberty_draw_layer_row(LibertyLayer *layer, uint16_t row,
 		SDL_BlendMode blend,
-		LibertyVec2 offset)
+		LibertyVec2 offset, float scale)
 {
 	SDL_SetTextureBlendMode(layer, blend);
 	LibertyRGB colour = liberty_get_colour();
 	SDL_SetTextureColorMod(layer, colour.r, colour.g, colour.b);
 	SDL_SetTextureAlphaMod(layer, colour.a);
 	SDL_Rect srcrect = {offset.x, row + offset.y, Config.width, 1};
-	SDL_FRect destrect = {0, row, Config.width, 1};
+	float width = Config.width * scale;
+	SDL_FRect destrect = {(Config.width - width)*0.5f, row, width, 1};
+	SDL_RenderTexture(Renderer, layer, &srcrect, &destrect);
+}
+
+void liberty_draw_layer_column(LibertyLayer *layer, uint16_t column,
+		SDL_BlendMode blend,
+		LibertyVec2 offset, float scale)
+{
+	SDL_SetTextureBlendMode(layer, blend);
+	LibertyRGB colour = liberty_get_colour();
+	SDL_SetTextureColorMod(layer, colour.r, colour.g, colour.b);
+	SDL_SetTextureAlphaMod(layer, colour.a);
+	SDL_Rect srcrect = {column + offset.x, offset.y, 1, Config.height};
+	float height = Config.height * scale;
+	SDL_FRect destrect = {column, (Config.height - height)*0.5f, 1, height};
 	SDL_RenderTexture(Renderer, layer, &srcrect, &destrect);
 }
