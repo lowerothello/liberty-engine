@@ -1,6 +1,11 @@
 /* not intended to be accessed directly */
 /* a void pointer so it can be a direct wrapper over (SDL_Texture) lol */
-typedef void LibertyLayer; /* private pointer */
+typedef struct LibertyLayer
+{
+	uint16_t width;
+	uint16_t height;
+	void    *data;
+} LibertyLayer;
 
 /* allocate/free layers */
 LibertyLayer *liberty_new_layer(LibertyVec2 size);

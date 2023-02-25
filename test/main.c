@@ -1,10 +1,19 @@
 #include "../include/liberty.h"
 
-#define WIDTH 320
+#define OVERSCAN 50
+#define LENS_DISTORTION 0.1f
+#define LENS_JITTER 0.15f
+#define MIN_JITTER 5.0f
+
+#define WIDTH  320
 #define HEIGHT 180
 
+#define OSWIDTH  (WIDTH+(OVERSCAN<<1))
+#define OSHEIGHT (HEIGHT+(OVERSCAN<<1))
+
+
 #define NOISE_TEX_SIZE 1024
-#define GRID_SIZE 0x28
+#define GRID_SIZE 0x1c
 #define PLAYER_SIZE 0x10
 
 #define WALK_ACCEL 2000.f
@@ -18,7 +27,7 @@
 #define DIALOGUE_WIDTH_MARGIN 11
 #define DIALOGUE_HEIGHT_MARGIN 13
 
-#define BLOOMOPACITY 0x03 /* (uint8_t) */
+#define BLOOMOPACITY 0x01 /* (uint8_t) */
 #define SHADOWOPACITY 0x38 /* (uint8_t) */
 #define BLOOMRADIUS 5 /* (int) */
 
@@ -35,7 +44,7 @@ LibertyConfig liberty_default_config =
 };
 
 LibertyFont     *font, *dialogueprompt;
-LibertyLayer    *vfxLayerX, *vfxLayerY, *uiLayer, *noiseLayer;
+LibertyLayer    *vfxLayerX, *vfxLayerY, *vfxLayerZ, *uiLayer, *noiseLayer;
 LibertyTexture  *texture;
 LibertyDialogue *dialogue;
 LibertyGridMap  *map;
@@ -93,14 +102,14 @@ void drawTestEntity(LibertyEntity *entity, LibertyVec2 camera)
 			buffer);
 }
 
-
 void liberty_callback_init(void)
 {
 	font = liberty_new_font_from_file("test/Untitled1-6.bdf");
 	dialogueprompt = liberty_new_font_from_file("test/dialogueprompt-8.bdf");
-	uiLayer = liberty_new_layer((LibertyVec2){WIDTH, HEIGHT});
-	vfxLayerX = liberty_new_layer((LibertyVec2){WIDTH, HEIGHT});
-	vfxLayerY = liberty_new_layer((LibertyVec2){WIDTH, HEIGHT});
+	uiLayer =    liberty_new_layer((LibertyVec2){OSWIDTH, OSHEIGHT});
+	vfxLayerX =  liberty_new_layer((LibertyVec2){OSWIDTH, OSHEIGHT});
+	vfxLayerY =  liberty_new_layer((LibertyVec2){OSWIDTH, OSHEIGHT});
+	vfxLayerZ =  liberty_new_layer((LibertyVec2){OSWIDTH, OSHEIGHT});
 	noiseLayer = liberty_new_layer((LibertyVec2){NOISE_TEX_SIZE, NOISE_TEX_SIZE});
 	liberty_set_draw_layer(noiseLayer);
 	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
@@ -136,6 +145,7 @@ void liberty_callback_cleanup(void)
 	liberty_free_layer(uiLayer);
 	liberty_free_layer(vfxLayerX);
 	liberty_free_layer(vfxLayerY);
+	liberty_free_layer(vfxLayerZ);
 	liberty_free_layer(noiseLayer);
 	liberty_free_dialogue(dialogue);
 	liberty_free_texture(texture);
@@ -250,8 +260,8 @@ LibertySignal liberty_callback_update(double deltatime)
 	p.pos.y += p.accel.y*deltatime;
 
 	LibertyVec2 cameratarget;
-	cameratarget.x = p.pos.x - ((WIDTH - PLAYER_SIZE)>>1);
-	cameratarget.y = p.pos.y - ((HEIGHT - PLAYER_SIZE)>>1);
+	cameratarget.x = p.pos.x - ((OSWIDTH - PLAYER_SIZE)>>1);
+	cameratarget.y = p.pos.y - ((OSHEIGHT - PLAYER_SIZE)>>1);
 
 	/* allows overshoot, not sure if that's a problem */
 	p.camera.x = LERP(p.camera.x, cameratarget.x, CAMERA_SPEED*deltatime);
@@ -266,8 +276,8 @@ void draw_dialogue(LibertyDialogue *d, double deltatime)
 {
 	if (!d) return;
 
-	float x = ((WIDTH - DIALOGUE_WIDTH)>>1);
-	float y = (HEIGHT>>1) + (((HEIGHT>>1) - DIALOGUE_HEIGHT)>>1);
+	float x = ((OSWIDTH - DIALOGUE_WIDTH)>>1);
+	float y = (OSHEIGHT>>1) + (((OSHEIGHT>>1) - DIALOGUE_HEIGHT)>>1);
 	liberty_draw_rect(0, (LibertyRect){x, y, DIALOGUE_WIDTH, DIALOGUE_HEIGHT});
 
 	if (d->name && strlen(d->name))
@@ -299,8 +309,8 @@ void liberty_callback_draw(double deltatime)
 	draw_map_id(map, (LibertyVec2){-p.camera.x, -p.camera.y}, 1);
 
 	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
-	for (uint8_t x = 0; x <= WIDTH/GRID_SIZE; x++)
-		for (uint8_t y = 0; y <= HEIGHT/GRID_SIZE; y++)
+	for (uint8_t x = 0; x <= OSWIDTH/GRID_SIZE; x++)
+		for (uint8_t y = 0; y <= OSHEIGHT/GRID_SIZE; y++)
 		{
 			liberty_draw_line((LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE - 1, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE}, (LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE + 1, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE});
 			liberty_draw_line((LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE - 1}, (LibertyVec2){x*GRID_SIZE-(int)p.camera.x%GRID_SIZE, y*GRID_SIZE-(int)p.camera.y%GRID_SIZE + 1});
@@ -321,19 +331,6 @@ void liberty_callback_draw(double deltatime)
 
 
 	draw_dialogue(dialogue, deltatime);
-	char buffer[32];
-	snprintf(buffer, 32, "%d", (int)(1.0 / deltatime));
-	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 1}, buffer);
-	if (p.input.up) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 10}, "up");
-	if (p.input.down) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 15}, "down");
-	if (p.input.left) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 20}, "left");
-	if (p.input.right) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 25}, "right");
-
-	snprintf(buffer, 32, "pos: %d x %d", (int)p.pos.x, (int)p.pos.y);
-	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 80, 45}, buffer);
-
-	snprintf(buffer, 32, "camera: %d x %d", (int)p.camera.x, (int)p.camera.y);
-	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 80, 50}, buffer);
 
 	liberty_set_draw_layer(vfxLayerX);
 	// liberty_set_draw_layer(NULL);
@@ -364,44 +361,61 @@ void liberty_callback_draw(double deltatime)
 	liberty_set_colour((LibertyRGB){0x00, 0x00, 0xff, 0xff}); liberty_draw_layer(uiLayer, SDL_BLENDMODE_ADD, (LibertyVec2){+2, +1});
 
 
+	/* noise */
+	liberty_set_colour((LibertyRGB){0x20, 0x20, 0xff, 0x40});
+	liberty_draw_layer(noiseLayer, SDL_BLENDMODE_ADD, (LibertyVec2){rand()%(NOISE_TEX_SIZE - OSWIDTH), rand()%(NOISE_TEX_SIZE - OSHEIGHT)});
+
+
 	int rng;
 	uint8_t rngradius;
-	float radius;
-	rngradius = 3;
-#define LENS_DISTORTION 0.03f
+	float radius = 1.0f;
 
 	liberty_set_draw_layer(vfxLayerY);
 	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
 	liberty_draw_clear();
 	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
-	for (uint16_t i = 0; i < HEIGHT; i++)
+	// rngradius = 6;
+	for (uint16_t i = 0; i < OSHEIGHT; i++)
 	{
-		radius = powf(1.0f - (float)abs((int)i - (HEIGHT>>1)) / (float)(HEIGHT>>1), LENS_DISTORTION);
-		// rngradius = abs((int)i - (HEIGHT>>1)) / 2;
+		radius = powf(1.0f - (float)abs((int)i - (OSHEIGHT>>1)) / (float)(OSHEIGHT>>1), LENS_DISTORTION);
+		rngradius = abs((int)i - (OSHEIGHT>>1)) * LENS_JITTER + MIN_JITTER;
 		rng = rand()%((rngradius<<1) + 1) - rngradius;
 
 		liberty_draw_layer_row(vfxLayerX, i, SDL_BLENDMODE_ADD, (LibertyVec2){rng, 0}, radius);
 	}
 
-
-	rngradius = 2;
-
-	liberty_set_draw_layer(NULL);
+	liberty_set_draw_layer(vfxLayerZ);
 	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
 	liberty_draw_clear();
 	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
-	for (uint16_t i = 0; i < WIDTH; i++)
+	// rngradius = 1;
+	for (uint16_t i = 0; i < OSWIDTH; i++)
 	{
-		radius = powf(1.0f - (float)abs((int)i - (WIDTH>>1)) / (float)(WIDTH>>1), LENS_DISTORTION);
-		// rngradius = abs((int)i - (WIDTH>>1)) / 2;
+		radius = powf(1.0f - (float)abs((int)i - (OSWIDTH>>1)) / (float)(OSWIDTH>>1), LENS_DISTORTION);
+		rngradius = abs((int)i - (OSWIDTH>>1)) * LENS_JITTER;
 		rng = rand()%((rngradius<<1) + 1) - rngradius;
 
 		liberty_draw_layer_column(vfxLayerY, i, SDL_BLENDMODE_ADD, (LibertyVec2){0, rng}, radius);
 	}
 
+	liberty_set_draw_layer(NULL);
+	liberty_set_colour((LibertyRGB){0x00, 0x00, 0x00, 0xff});
+	liberty_draw_clear();
 	liberty_set_colour((LibertyRGB){0xff, 0xff, 0xff, 0xff});
-	// liberty_draw_layer(uiLayer, SDL_BLENDMODE_ADD, (LibertyVec2){0, 0});
 
-	liberty_set_colour((LibertyRGB){0x20, 0x20, 0xff, 0x40});
-	liberty_draw_layer(noiseLayer, SDL_BLENDMODE_ADD, (LibertyVec2){rand()%(NOISE_TEX_SIZE - WIDTH), rand()%(NOISE_TEX_SIZE - HEIGHT)});
+	liberty_draw_layer(vfxLayerZ, SDL_BLENDMODE_ADD, (LibertyVec2){OVERSCAN, OVERSCAN});
+
+	char buffer[32];
+	snprintf(buffer, 32, "%d", (int)(1.0 / deltatime));
+	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 1}, buffer);
+	if (p.input.up) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 10}, "up");
+	if (p.input.down) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 15}, "down");
+	if (p.input.left) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 20}, "left");
+	if (p.input.right) liberty_draw_font_string(font, (LibertyVec2){WIDTH - 40, 25}, "right");
+
+	snprintf(buffer, 32, "pos: %d x %d", (int)p.pos.x, (int)p.pos.y);
+	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 80, 45}, buffer);
+
+	snprintf(buffer, 32, "camera: %d x %d", (int)p.camera.x, (int)p.camera.y);
+	liberty_draw_font_string(font, (LibertyVec2){WIDTH - 80, 50}, buffer);
 }
